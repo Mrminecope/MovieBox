@@ -129,20 +129,14 @@ function Get-TerminalCols {
 function Print-Header {
     $Cols = Get-TerminalCols
 
-    if ($Cols -ge 65) {
-        $BannerWidth = 60
+    if ($Cols -ge 46) {
+        $BannerWidth = 43
         $Lines = @(
-            " __  __            _      ____              _____ _   _ ___ ",
-            "|  \/  | _____   _(_) ___| __ )  _____  __ |_   _| | | |_ _|",
-            "| |\/| |/ _ \ \ / / |/ _ \  _ \ / _ \ \/ /   | | | | | || | ",
-            "| |  | | (_) \ V /| |  __/ |_) | (_) >  <    | | | |_| || | ",
-            "|_|  |_|\___/ \_/ |_|\___|____/ \___/_/\_\   |_|  \___/|___|"
-        )
-    } elseif ($Cols -ge 36) {
-        $BannerWidth = 31
-        $Lines = @(
-            "█▀▄▀█ █▀█ █ █ █ █▀▀ █▀▄ █▀█ ▀▄▀",
-            "█ ▀ █ █▄█ ▀▄▀ █ ██▄ █▄▀ █▄█ █ █"
+            " __  __            _      ____             ",
+            "|  \/  | _____   _(_) ___| __ )  _____  __ ",
+            "| |\/| |/ _ \ \ / / |/ _ \  _ \ / _ \ \/ / ",
+            "| |  | | (_) \ V /| |  __/ |_) | (_) >  <  ",
+            "|_|  |_|\___/ \_/ |_|\___|____/ \___/_/\_\ "
         )
     } else {
         $BannerWidth = 8
@@ -346,7 +340,17 @@ try {
     Expand-Archive -Path $ZipFile -DestinationPath $TempDir -Force
     $ExtractedExe = Join-Path $TempDir $BinName
     if (-not (Test-Path $ExtractedExe)) {
-        throw "Binary not found in archive."
+        $LegacyExe = Join-Path $TempDir "moviebox-tui.exe"
+        if (Test-Path $LegacyExe) {
+            $ExtractedExe = $LegacyExe
+        } else {
+            $AnyExe = Get-ChildItem -Path $TempDir -Filter "*.exe" -File | Select-Object -First 1
+            if ($AnyExe) {
+                $ExtractedExe = $AnyExe.FullName
+            } else {
+                throw "Binary not found in archive."
+            }
+        }
     }
 
     try { Unblock-File -Path $ExtractedExe -ErrorAction SilentlyContinue } catch {}

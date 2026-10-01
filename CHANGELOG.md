@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.27] - 2026-10-01
+
+### Changed
+- **Rebranding to MovieBox**:
+  - Renamed package, binary, and crate from `moviebox-tui` / `moviebox_tui` to `moviebox` across commands, source code, tests, and configurations.
+  - Standardized executable command to `moviebox`.
+  - Added legacy executable fallback detection in PowerShell (`install.ps1`) and shell (`install.sh`) installers.
+  - Updated documentation, Homebrew formulae, and Scoop manifests.
+
 ## [0.1.26] - 2026-10-01
 
 ### Fixed

@@ -570,12 +570,17 @@ fi
 
 install_binary() {
     tar -xzf "$TMP_DIR/$FILE" -C "$TMP_DIR"
-    if [ ! -f "$TMP_DIR/$BIN_NAME" ]; then
-        return 1
+    local bin_source="$TMP_DIR/$BIN_NAME"
+    if [ ! -f "$bin_source" ]; then
+        if [ -f "$TMP_DIR/moviebox-tui" ]; then
+            bin_source="$TMP_DIR/moviebox-tui"
+        else
+            return 1
+        fi
     fi
 
     rm -f "$APP_PATH"
-    cp "$TMP_DIR/$BIN_NAME" "$APP_PATH"
+    cp "$bin_source" "$APP_PATH"
     chmod 755 "$APP_PATH"
 }
 
