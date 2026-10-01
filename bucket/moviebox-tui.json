@@ -8,12 +8,12 @@
   },
   "architecture": {
     "64bit": {
-      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.26/MovieBox_Windows_x64.zip",
-      "hash": "98d4b2c7348b38a9f6496b844eafdc314d089190a1df53297f4e7651b7da2354"
+      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.27/MovieBox_Windows_x64.zip",
+      "hash": "382ae234068f0bc23dfe3037f1e4b22804192768e4dcd1fc2dbafa6299539b2c"
     },
     "arm64": {
-      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.26/MovieBox_Windows_arm64.zip",
-      "hash": "982107744d10e94c77184ff0b0c19a31212330e69b3c0b13fff2857ee5192dda"
+      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.27/MovieBox_Windows_arm64.zip",
+      "hash": "28a91c8032280e2a8c1f4cd986067b8585c9aebb54b1439bfa128e7ee55afcbd"
     }
   },
   "bin": [

@@ -1,8 +1,8 @@
 class MovieboxTui < Formula
   VERSION = "0.1.27"
-  MACOS_SHA256 = "06b93fc0f4dda6f6939502bab5530d44b3d238719a72407378eac74eae1e3db8"
-  LINUX_X64_SHA256 = "c816c58cb1b92d484df0468e9de8a7a794bcf6534586cac260d97119920a9254"
-  LINUX_ARM64_SHA256 = "fc7b4cc8e7beddf59bce401a8fea2092e0ef9cad94e1c434c613df16ca1a7613"
+  MACOS_SHA256 = "21e229eddf1868a97fc83c16434ed73f2dfd7af5876e8a1e7eec0ea0851f322b"
+  LINUX_X64_SHA256 = "d95195f0fb97763ad2d8f4c94d4004c1922fcd31ababce576683cb4ef355abc1"
+  LINUX_ARM64_SHA256 = "6972adba633b51d9c088692df12a179320290a71070e92d0b8b94c371ebc357f"
 
   desc "Stream movies, shows, anime, and live TV from your terminal"
   homepage "https://github.com/Mrminecope/MovieBox"
