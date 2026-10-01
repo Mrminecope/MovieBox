@@ -45,8 +45,8 @@ jobs:
           if ! gh release view "v$VERSION" --repo "${{ github.repository }}" --json id > /dev/null 2>&1; then
             echo "Release run finished without publishing v$VERSION (no new GitHub release). Nothing to do."
             echo "publish=false" >> "$GITHUB_OUTPUT"
-          elif curl -s -f -o /dev/null -H "User-Agent: github-actions" "https://crates.io/api/v1/crates/moviebox-tui/$VERSION"; then
-            echo "Crate moviebox-tui@$VERSION is already published on crates.io. Nothing to do."
+          elif curl -s -f -o /dev/null -H "User-Agent: github-actions" "https://crates.io/api/v1/crates/moviebox/$VERSION"; then
+            echo "Crate moviebox@$VERSION is already published on crates.io. Nothing to do."
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else
             echo "publish=true" >> "$GITHUB_OUTPUT"

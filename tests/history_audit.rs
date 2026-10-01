@@ -1,8 +1,8 @@
-use moviebox_tui::history::{HistoryManager, PendingPlaybackState, WatchHistoryItem};
-use moviebox_tui::providers::models::ProviderKind;
-use moviebox_tui::tui::action::Action;
-use moviebox_tui::tui::app::App;
-use moviebox_tui::tui::state::Screen;
+use moviebox::history::{HistoryManager, PendingPlaybackState, WatchHistoryItem};
+use moviebox::providers::models::ProviderKind;
+use moviebox::tui::action::Action;
+use moviebox::tui::app::App;
+use moviebox::tui::state::Screen;
 
 #[allow(clippy::too_many_arguments)]
 fn dummy_history_item(

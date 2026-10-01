@@ -110,12 +110,12 @@ jobs:
 
       - name: Smoke-test produced Unix binary
         if: matrix.os != 'windows-latest'
-        run: target/${{ matrix.target }}/release/moviebox-tui --version
+        run: target/${{ matrix.target }}/release/moviebox --version
 
       - name: Validate aarch64 ELF segment page alignment
         if: matrix.target == 'aarch64-unknown-linux-musl'
         run: |
-          BIN="target/${{ matrix.target }}/release/moviebox-tui"
+          BIN="target/${{ matrix.target }}/release/moviebox"
           python3 -c '
           import subprocess, sys
           out = subprocess.check_output(["readelf", "-lW", sys.argv[1]], text=True)
@@ -129,13 +129,13 @@ jobs:
       - name: Smoke-test produced Windows binary
         if: matrix.target == 'x86_64-pc-windows-msvc'
         shell: pwsh
-        run: .\target\${{ matrix.target }}\release\moviebox-tui.exe --version
+        run: .\target\${{ matrix.target }}\release\moviebox.exe --version
 
       - name: Archive Unix
         if: matrix.os != 'windows-latest'
         run: |
           mkdir dist
-          cp target/${{ matrix.target }}/release/moviebox-tui dist/
+          cp target/${{ matrix.target }}/release/moviebox dist/
           cp README.md dist/
           cp LICENSE-* dist/ || true
 
@@ -144,14 +144,14 @@ jobs:
           elif [ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]; then
             tar -czvf MovieBox_Linux_arm64.tar.gz -C dist .
           else
-            tar -czvf moviebox-tui-${{ matrix.target }}.tar.gz -C dist .
+            tar -czvf moviebox-${{ matrix.target }}.tar.gz -C dist .
           fi
 
       - name: Archive Windows
         if: matrix.os == 'windows-latest'
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item "target\${{ matrix.target }}\release\moviebox-tui.exe" "dist\"
+          Copy-Item "target\${{ matrix.target }}\release\moviebox.exe" "dist\"
           Copy-Item "README.md" "dist\"
           $licenses = Get-ChildItem "LICENSE-*" -ErrorAction SilentlyContinue
           if ($licenses) {
@@ -197,9 +197,9 @@ jobs:
       - name: Create Universal Binary
         run: |
           mkdir -p universal/dist
-          tar -xzf x86_64/moviebox-tui-x86_64-apple-darwin.tar.gz -C x86_64/
-          tar -xzf aarch64/moviebox-tui-aarch64-apple-darwin.tar.gz -C aarch64/
-          lipo -create -output universal/dist/moviebox-tui x86_64/moviebox-tui aarch64/moviebox-tui
+          tar -xzf x86_64/moviebox-x86_64-apple-darwin.tar.gz -C x86_64/
+          tar -xzf aarch64/moviebox-aarch64-apple-darwin.tar.gz -C aarch64/
+          lipo -create -output universal/dist/moviebox x86_64/moviebox aarch64/moviebox
           cp README.md universal/dist/
           cp LICENSE-* universal/dist/ || true
           cd universal/dist
@@ -250,14 +250,14 @@ jobs:
 
       - name: Validate Android ELF headers
         run: |
-          BIN="target/aarch64-linux-android/release/moviebox-tui"
+          BIN="target/aarch64-linux-android/release/moviebox"
           readelf -lW "$BIN" | grep -F "PHDR" || { echo "::error::Missing PT_PHDR"; exit 1; }
           readelf -lW "$BIN" | grep -F "/system/bin/linker64" || { echo "::error::Missing Android PT_INTERP"; exit 1; }
 
       - name: Archive Android
         run: |
           mkdir dist
-          cp target/aarch64-linux-android/release/moviebox-tui dist/
+          cp target/aarch64-linux-android/release/moviebox dist/
           cp README.md dist/
           cp LICENSE-* dist/ || true
           tar -czvf MovieBox_Android_arm64.tar.gz -C dist .

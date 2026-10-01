@@ -598,7 +598,7 @@ impl App {
                             );
                         }
                         4 => {
-                            const REPO_URL: &str = "https://github.com/mesamirh/MovieBox-Tui";
+                            const REPO_URL: &str = "https://github.com/Mrminecope/MovieBox";
                             match crate::net::open_external_url(REPO_URL) {
                                 Ok(()) => {
                                     self.state.notify(
@@ -750,14 +750,14 @@ impl App {
                     Ok(None) => {
                         if self.state.manual_update_check {
                             self.state.set_status_long(format!(
-                                "MovieBox-Tui is up to date (v{}).",
+                                "MovieBox is up to date (v{}).",
                                 env!("CARGO_PKG_VERSION")
                             ));
                             self.state.notify(
                                 NotificationKind::Success,
                                 "Up to date",
                                 format!(
-                                    "MovieBox-Tui v{} is the latest version.",
+                                    "MovieBox v{} is the latest version.",
                                     env!("CARGO_PKG_VERSION")
                                 ),
                             );
@@ -783,9 +783,7 @@ impl App {
                             self.state.notify(
                                 NotificationKind::Info,
                                 "Update Available",
-                                format!(
-                                    "MovieBox-Tui v{version} is available. Exit search to view."
-                                ),
+                                format!("MovieBox v{version} is available. Exit search to view."),
                             );
                         } else if self.state.is_playing || self.state.download_progress.is_some() {
                             self.state.update_available = Some((version.clone(), notes));
@@ -881,7 +879,7 @@ impl App {
                         self.state.notify(
                             NotificationKind::Success,
                             "Update Installed",
-                            "Restarting MovieBox-Tui...",
+                            "Restarting MovieBox...",
                         );
 
                         crossterm::terminal::disable_raw_mode().ok();

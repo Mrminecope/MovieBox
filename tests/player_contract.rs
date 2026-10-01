@@ -1,4 +1,4 @@
-use moviebox_tui::tui::player::{PlayerKind, command, supports_headers};
+use moviebox::tui::player::{PlayerKind, command, supports_headers};
 use std::process::Command;
 
 fn get_cmd_args(cmd: &Command) -> Vec<String> {
@@ -10,8 +10,8 @@ fn get_cmd_args(cmd: &Command) -> Vec<String> {
 #[test]
 fn test_vlc_win32_path_contract_never_emits_forward_slashes_for_local_subtitles() {
     let windows_drive_paths = [
-        r"C:\Users\Default\AppData\Local\MovieBox-Tui\subs\Inception_a1b2c3d4.srt",
-        "C:/Users/Default/AppData/Local/MovieBox-Tui/subs/Inception_a1b2c3d4.srt",
+        r"C:\Users\Default\AppData\Local\MovieBox\subs\Inception_a1b2c3d4.srt",
+        "C:/Users/Default/AppData/Local/MovieBox/subs/Inception_a1b2c3d4.srt",
         r"D:\Media\Subtitles\Sub.ass",
         "D:/Media/Subtitles/Sub.ass",
     ];
@@ -154,7 +154,7 @@ fn test_iina_cli_contract_uses_plural_sub_files_and_filters_scripts() {
 
 #[test]
 fn test_mpv_contract_uses_sub_file_and_sanitizes_script_opts() {
-    let script_opts = moviebox_tui::tui::player::format_mpv_script_opts(
+    let script_opts = moviebox::tui::player::format_mpv_script_opts(
         "addons,malicious",
         "subj,evil=1",
         2,

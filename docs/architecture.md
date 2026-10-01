@@ -1,6 +1,6 @@
 # Architecture
 
-MovieBox-Tui is a terminal client (ratatui + crossterm + tokio) for streaming movies,
+MovieBox is a terminal client (ratatui + crossterm + tokio) for streaming movies,
 series and TV channels from multiple providers. This document describes the shape of the
 code and how data flows through it.
 

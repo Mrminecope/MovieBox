@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest a new feature, improvement, or provider for MovieBox-Tui.
+description: Suggest a new feature, improvement, or provider for MovieBox.
 title: "feat: "
 labels: ["enhancement"]
 body:

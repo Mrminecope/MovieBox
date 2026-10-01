@@ -11,7 +11,7 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo "${BLUE}⏳ Running MovieBox-Tui pre-commit checks...${NC}\n"
+echo "${BLUE}⏳ Running MovieBox pre-commit checks...${NC}\n"
 
 echo "${YELLOW}🦀 1/3 Checking Code Formatting (cargo fmt)...${NC}"
 if ! cargo fmt --check; then

@@ -75,7 +75,7 @@ All popups (Themes, Providers, Players, Resolution, Subtitles, TV Manager, Addon
 - **`↑` / `↓` / `k` / `j`**: Navigate setting rows.
 - **`←` / `→` / `h` / `l`**: Adjust setting values or toggle options.
 - **`Enter` / `Space`**: Activate setting row (edit path, pick theme, run maintenance action).
-- **`d`** (on Download Folder): Reset custom download path back to `~/Downloads/MovieBox-TUI`.
+- **`d`** (on Download Folder): Reset custom download path back to `~/Downloads/MovieBox`.
 - **`Esc` / `q`**: Close settings and persist changes.
 
 ## Update Notification Modal

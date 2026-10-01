@@ -1,6 +1,6 @@
 # Stremio Addons
 
-MovieBox-TUI supports Stremio HTTP addons. You can install standard addon manifest URLs to browse catalogs and stream media.
+MovieBox supports Stremio HTTP addons. You can install standard addon manifest URLs to browse catalogs and stream media.
 
 ## Quick Start
 
@@ -27,5 +27,5 @@ The Addon Manager lets you add, enable, or remove addon manifests:
 ## Storage
 
 Installed addons are saved to `addons_config.json` in your configuration directory:
-- **Linux / macOS / Termux**: `~/.config/moviebox-tui/addons_config.json`
-- **Windows**: `%APPDATA%\MovieBox-Tui\addons_config.json`
+- **Linux / macOS / Termux**: `~/.config/moviebox/addons_config.json`
+- **Windows**: `%APPDATA%\MovieBox\addons_config.json`

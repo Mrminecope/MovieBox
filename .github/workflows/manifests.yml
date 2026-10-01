@@ -86,35 +86,41 @@ jobs:
       - name: Update Formula
         if: ${{ steps.release_gate.outputs.update != 'false' }}
         run: |
-          FORMULA_FILE="Formula/moviebox-tui.rb"
           VERSION="${{ steps.release.outputs.version }}"
-          sed -i "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" "$FORMULA_FILE"
-          sed -i "s/MACOS_SHA256 = \".*\"/MACOS_SHA256 = \"${{ steps.release.outputs.macos_sha }}\"/" "$FORMULA_FILE"
-          sed -i "s/LINUX_X64_SHA256 = \".*\"/LINUX_X64_SHA256 = \"${{ steps.release.outputs.linux_x64_sha }}\"/" "$FORMULA_FILE"
-          sed -i "s/LINUX_ARM64_SHA256 = \".*\"/LINUX_ARM64_SHA256 = \"${{ steps.release.outputs.linux_arm64_sha }}\"/" "$FORMULA_FILE"
+          for FORMULA_FILE in Formula/moviebox.rb Formula/moviebox-tui.rb; do
+            if [ -f "$FORMULA_FILE" ]; then
+              sed -i "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" "$FORMULA_FILE"
+              sed -i "s/MACOS_SHA256 = \".*\"/MACOS_SHA256 = \"${{ steps.release.outputs.macos_sha }}\"/" "$FORMULA_FILE"
+              sed -i "s/LINUX_X64_SHA256 = \".*\"/LINUX_X64_SHA256 = \"${{ steps.release.outputs.linux_x64_sha }}\"/" "$FORMULA_FILE"
+              sed -i "s/LINUX_ARM64_SHA256 = \".*\"/LINUX_ARM64_SHA256 = \"${{ steps.release.outputs.linux_arm64_sha }}\"/" "$FORMULA_FILE"
+            fi
+          done
 
       - name: Update Scoop Manifest
         if: ${{ steps.release_gate.outputs.update != 'false' }}
         run: |
-          MANIFEST="bucket/moviebox-tui.json"
           VERSION="${{ steps.release.outputs.version }}"
           WIN_X64_SHA="${{ steps.release.outputs.windows_x64_sha }}"
           WIN_ARM64_SHA="${{ steps.release.outputs.windows_arm64_sha }}"
 
-          jq --arg ver "$VERSION" \
-             --arg x64 "$WIN_X64_SHA" \
-             --arg arm64 "$WIN_ARM64_SHA" \
-             '.version = $ver |
-              .architecture."64bit".url = "https://github.com/${{ github.repository }}/releases/download/v" + $ver + "/MovieBox_Windows_x64.zip" |
-              .architecture."64bit".hash = $x64 |
-              .architecture."arm64".url = "https://github.com/${{ github.repository }}/releases/download/v" + $ver + "/MovieBox_Windows_arm64.zip" |
-              .architecture."arm64".hash = $arm64' \
-             "$MANIFEST" > "${MANIFEST}.tmp" && mv "${MANIFEST}.tmp" "$MANIFEST"
+          for MANIFEST in bucket/moviebox.json bucket/moviebox-tui.json; do
+            if [ -f "$MANIFEST" ]; then
+              jq --arg ver "$VERSION" \
+                 --arg x64 "$WIN_X64_SHA" \
+                 --arg arm64 "$WIN_ARM64_SHA" \
+                 '.version = $ver |
+                  .architecture."64bit".url = "https://github.com/${{ github.repository }}/releases/download/v" + $ver + "/MovieBox_Windows_x64.zip" |
+                  .architecture."64bit".hash = $x64 |
+                  .architecture."arm64".url = "https://github.com/${{ github.repository }}/releases/download/v" + $ver + "/MovieBox_Windows_arm64.zip" |
+                  .architecture."arm64".hash = $arm64' \
+                 "$MANIFEST" > "${MANIFEST}.tmp" && mv "${MANIFEST}.tmp" "$MANIFEST"
+            fi
+          done
 
       - name: Commit and Push Changes
         if: ${{ steps.release_gate.outputs.update != 'false' }}
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore(dist): update formula and scoop manifest to v${{ steps.release.outputs.version }}"
-          file_pattern: "Formula/moviebox-tui.rb bucket/moviebox-tui.json"
+          file_pattern: "Formula/moviebox.rb Formula/moviebox-tui.rb bucket/moviebox.json bucket/moviebox-tui.json"
           branch: main

@@ -1,9 +1,9 @@
-use moviebox_tui::models::NotificationKind;
-use moviebox_tui::providers::models::RequestContext;
-use moviebox_tui::tui::action::Action;
-use moviebox_tui::tui::app::App;
-use moviebox_tui::tui::state::PlayerKind;
-use moviebox_tui::tui::text::is_http_url;
+use moviebox::models::NotificationKind;
+use moviebox::providers::models::RequestContext;
+use moviebox::tui::action::Action;
+use moviebox::tui::app::App;
+use moviebox::tui::state::PlayerKind;
+use moviebox::tui::text::is_http_url;
 
 #[tokio::test]
 async fn test_search_failure_clears_loading_and_sets_error_state() {
@@ -115,8 +115,8 @@ async fn test_authoritative_launch_player_blocks_bypass_attempts() {
 
     app.handle_action(Action::LaunchPlayback(
         PlayerKind::Mpv,
-        moviebox_tui::providers::models::PlaybackSource::bare(
-            moviebox_tui::providers::models::ProviderKind::MovieBox,
+        moviebox::providers::models::PlaybackSource::bare(
+            moviebox::providers::models::ProviderKind::MovieBox,
             "magnet:?xt=urn:btih:d08244124e9f0863014f56947ab51404ec102770",
             None,
         ),
@@ -134,8 +134,8 @@ async fn test_authoritative_launch_player_blocks_bypass_attempts() {
 
     app.handle_action(Action::LaunchPlayback(
         PlayerKind::Mpv,
-        moviebox_tui::providers::models::PlaybackSource::bare(
-            moviebox_tui::providers::models::ProviderKind::MovieBox,
+        moviebox::providers::models::PlaybackSource::bare(
+            moviebox::providers::models::ProviderKind::MovieBox,
             "file:///etc/shadow",
             None,
         ),

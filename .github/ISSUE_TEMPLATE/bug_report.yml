@@ -16,7 +16,7 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Run `moviebox-tui`
+        1. Run `moviebox`
         2. 
     validations:
       required: true

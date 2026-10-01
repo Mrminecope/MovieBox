@@ -18,17 +18,17 @@ try {
 } catch {}
 Set-StrictMode -Version Latest
 
-$AppName = "MovieBox-Tui"
-$BinName = "moviebox-tui.exe"
-$Repo = "mesamirh/MovieBox-Tui"
-$DefaultInstallDir = Join-Path $env:LOCALAPPDATA "Programs\MovieBox-Tui\bin"
+$AppName = "MovieBox"
+$BinName = "moviebox.exe"
+$Repo = "Mrminecope/MovieBox"
+$DefaultInstallDir = Join-Path $env:LOCALAPPDATA "Programs\MovieBox\bin"
 
 if ($Help) {
     Write-Host @"
-MovieBox-TUI Installer (Windows PowerShell)
+MovieBox Installer (Windows PowerShell)
 
 USAGE:
-    irm https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/Mrminecope/MovieBox/main/install.ps1 | iex
     .\install.ps1 [OPTIONS]
 
 OPTIONS:
@@ -37,7 +37,7 @@ OPTIONS:
     -Force               Reinstall even if already at the latest version
     -DryRun              Perform preflight checks without writing files
     -NoModifyPath        Do not modify User PATH environment variable
-    -Uninstall           Uninstall MovieBox-TUI from your system
+    -Uninstall           Uninstall MovieBox from your system
     -Help                Show this help message
 "@
     return
@@ -145,9 +145,9 @@ function Print-Header {
             "█ ▀ █ █▄█ ▀▄▀ █ ██▄ █▄▀ █▄█ █ █"
         )
     } else {
-        $BannerWidth = 12
+        $BannerWidth = 8
         $Lines = @(
-            "MovieBox-TUI"
+            "MovieBox"
         )
     }
 
@@ -177,6 +177,7 @@ function Do-Uninstall {
     $Found = $false
     $TargetDirs = @(
         $DefaultInstallDir,
+        "$env:LOCALAPPDATA\MovieBox",
         "$env:LOCALAPPDATA\MovieBox-Tui"
     )
 
@@ -184,7 +185,7 @@ function Do-Uninstall {
         $Exe = Join-Path $Dir $BinName
         if (Test-Path $Exe) {
             try {
-                $RunningProcesses = Get-Process -Name "moviebox-tui" -ErrorAction SilentlyContinue
+                $RunningProcesses = Get-Process -Name "moviebox", "moviebox-tui" -ErrorAction SilentlyContinue
                 if ($RunningProcesses) {
                     $RunningProcesses | Stop-Process -Force
                     Start-Sleep -Seconds 1
@@ -199,7 +200,7 @@ function Do-Uninstall {
     }
 
     if ($Found) {
-        $Removed = Remove-FromUserPath -Directories @($DefaultInstallDir, "$env:LOCALAPPDATA\MovieBox-Tui\bin")
+        $Removed = Remove-FromUserPath -Directories @($DefaultInstallDir, "$env:LOCALAPPDATA\MovieBox\bin", "$env:LOCALAPPDATA\MovieBox-Tui\bin")
         Write-Success "$AppName was successfully uninstalled."
         if ($Removed) {
             Write-Success "Removed stale entry from User PATH."
@@ -285,10 +286,10 @@ if (Test-Path $ExePath) {
         } else {
             try {
                 $CurrentVerOutput = (& $ExePath --version 2>&1 | Out-String)
-                if ($CurrentVerOutput -match "moviebox-tui\s+([\d\.]+)") {
+                if ($CurrentVerOutput -match "moviebox(?:-tui)?\s+([\d\.]+)") {
                     $CurrentVer = "v" + $matches[1]
                     if ($CurrentVer -eq $TargetVersion) {
-                        Write-Success "MovieBox-TUI $TargetVersion is already installed at $ExePath. Use -Force to reinstall."
+                        Write-Success "MovieBox $TargetVersion is already installed at $ExePath. Use -Force to reinstall."
                         return
                     }
                 }
@@ -304,7 +305,7 @@ if ($DryRun) {
     return
 }
 
-$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("moviebox-tui-" + [guid]::NewGuid())
+$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("moviebox-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
 
 $ZipFile = Join-Path $TempDir $ArchiveName
@@ -336,7 +337,7 @@ try {
         New-Item -ItemType Directory -Force -Path $EffectiveInstallDir | Out-Null
     }
 
-    $RunningProcesses = Get-Process -Name "moviebox-tui" -ErrorAction SilentlyContinue
+    $RunningProcesses = Get-Process -Name "moviebox", "moviebox-tui" -ErrorAction SilentlyContinue
     if ($RunningProcesses) {
         $RunningProcesses | Stop-Process -Force
         Start-Sleep -Seconds 1
@@ -386,7 +387,7 @@ if ((Get-Command "mpv" -ErrorAction SilentlyContinue) -or (Test-Path "C:\Program
 }
 
 Write-Host ""
-Write-Host "  + MovieBox-Tui $TargetVersion successfully installed!" -ForegroundColor Green
+Write-Host "  + MovieBox $TargetVersion successfully installed!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  - Binary:  " -ForegroundColor DarkGray -NoNewline
 Write-Host $ExePath -ForegroundColor White
@@ -406,7 +407,7 @@ if ($PathModified) {
 
 Write-Host ""
 Write-Host "  To start streaming:" -ForegroundColor White
-Write-Host "    moviebox-tui" -ForegroundColor Green
+Write-Host "    moviebox" -ForegroundColor Green
 Write-Host ""
 
 if (-not $PlayerDetected) {

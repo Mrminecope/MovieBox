@@ -1,4 +1,4 @@
-class MovieboxTui < Formula
+class Moviebox < Formula
   VERSION = "0.1.26"
   MACOS_SHA256 = "06b93fc0f4dda6f6939502bab5530d44b3d238719a72407378eac74eae1e3db8"
   LINUX_X64_SHA256 = "c816c58cb1b92d484df0468e9de8a7a794bcf6534586cac260d97119920a9254"
@@ -25,8 +25,7 @@ class MovieboxTui < Formula
   end
 
   def install
-    bin.install "moviebox" => "moviebox-tui"
-    bin.install_symlink bin / "moviebox-tui" => "moviebox"
+    bin.install "moviebox"
   end
 
   test do

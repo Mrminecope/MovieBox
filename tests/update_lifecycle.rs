@@ -1,14 +1,14 @@
-use moviebox_tui::models::NotificationKind;
-use moviebox_tui::tui::action::Action;
-use moviebox_tui::tui::app::App;
-use moviebox_tui::tui::overlay::update_modal_layout;
-use moviebox_tui::updater::apply::{
+use moviebox::models::NotificationKind;
+use moviebox::tui::action::Action;
+use moviebox::tui::app::App;
+use moviebox::tui::overlay::update_modal_layout;
+use moviebox::updater::apply::{
     InstallationEnvironment, SelfUpdateOutcome, apply_staged_binary, detect_environment,
     is_homebrew_managed, is_writable,
 };
-use moviebox_tui::updater::extract::extract_binary;
-use moviebox_tui::updater::verify::{compute_sha256, parse_sha256sums, verify_checksum};
-use moviebox_tui::updater::{Release, ReleaseAsset, TargetPlatform};
+use moviebox::updater::extract::extract_binary;
+use moviebox::updater::verify::{compute_sha256, parse_sha256sums, verify_checksum};
+use moviebox::updater::{Release, ReleaseAsset, TargetPlatform};
 use ratatui::layout::Rect;
 use std::io::Write;
 
@@ -180,7 +180,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  two_spaces.tar
 fn test_tar_gz_extraction_and_permissions() {
     let temp = tempfile::tempdir().unwrap();
     let archive_path = temp.path().join("test.tar.gz");
-    let staged_path = temp.path().join("moviebox-tui");
+    let staged_path = temp.path().join("moviebox");
 
     {
         let file = std::fs::File::create(&archive_path).unwrap();
@@ -189,7 +189,7 @@ fn test_tar_gz_extraction_and_permissions() {
 
         let data = b"#!/bin/sh\necho updated\n";
         let mut header = tar::Header::new_gnu();
-        header.set_path("moviebox-tui").unwrap();
+        header.set_path("moviebox").unwrap();
         header.set_size(data.len() as u64);
         header.set_mode(0o755);
         header.set_cksum();
@@ -197,7 +197,7 @@ fn test_tar_gz_extraction_and_permissions() {
         tar.finish().unwrap();
     }
 
-    extract_binary(&archive_path, "test.tar.gz", "moviebox-tui", &staged_path).unwrap();
+    extract_binary(&archive_path, "test.tar.gz", "moviebox", &staged_path).unwrap();
     assert!(staged_path.exists());
     assert_eq!(
         std::fs::read(&staged_path).unwrap(),
@@ -209,18 +209,18 @@ fn test_tar_gz_extraction_and_permissions() {
 fn test_zip_extraction_and_permissions() {
     let temp = tempfile::tempdir().unwrap();
     let archive_path = temp.path().join("test.zip");
-    let staged_path = temp.path().join("moviebox-tui.exe");
+    let staged_path = temp.path().join("moviebox.exe");
 
     {
         let file = std::fs::File::create(&archive_path).unwrap();
         let mut zip = zip::ZipWriter::new(file);
         let options = zip::write::SimpleFileOptions::default();
-        zip.start_file("dist/moviebox-tui.exe", options).unwrap();
+        zip.start_file("dist/moviebox.exe", options).unwrap();
         zip.write_all(b"windows binary payload").unwrap();
         zip.finish().unwrap();
     }
 
-    extract_binary(&archive_path, "test.zip", "moviebox-tui.exe", &staged_path).unwrap();
+    extract_binary(&archive_path, "test.zip", "moviebox.exe", &staged_path).unwrap();
     assert!(staged_path.exists());
     assert_eq!(
         std::fs::read(&staged_path).unwrap(),
@@ -232,7 +232,7 @@ fn test_zip_extraction_and_permissions() {
 fn test_archive_path_traversal_rejection() {
     let temp = tempfile::tempdir().unwrap();
     let archive_path = temp.path().join("malicious.tar.gz");
-    let staged_path = temp.path().join("moviebox-tui");
+    let staged_path = temp.path().join("moviebox");
 
     {
         let file = std::fs::File::create(&archive_path).unwrap();
@@ -259,12 +259,7 @@ fn test_archive_path_traversal_rejection() {
         enc.finish().unwrap();
     }
 
-    let res = extract_binary(
-        &archive_path,
-        "malicious.tar.gz",
-        "moviebox-tui",
-        &staged_path,
-    );
+    let res = extract_binary(&archive_path, "malicious.tar.gz", "moviebox", &staged_path);
     assert!(res.is_err());
     assert!(res.unwrap_err().contains("traversal"));
 }
@@ -308,16 +303,14 @@ fn test_binary_replacement_and_rollback_on_failure() {
 
 #[test]
 fn test_homebrew_detection_and_safe_refusal() {
-    let homebrew_path =
-        std::path::Path::new("/opt/homebrew/Cellar/moviebox-tui/0.1.12/bin/moviebox-tui");
+    let homebrew_path = std::path::Path::new("/opt/homebrew/Cellar/moviebox/0.1.12/bin/moviebox");
     assert!(is_homebrew_managed(homebrew_path));
 
-    let linuxbrew_path = std::path::Path::new(
-        "/home/linuxbrew/.linuxbrew/Cellar/moviebox-tui/0.1.12/bin/moviebox-tui",
-    );
+    let linuxbrew_path =
+        std::path::Path::new("/home/linuxbrew/.linuxbrew/Cellar/moviebox/0.1.12/bin/moviebox");
     assert!(is_homebrew_managed(linuxbrew_path));
 
-    let standard_user_path = std::path::Path::new("/usr/local/bin/moviebox-tui");
+    let standard_user_path = std::path::Path::new("/usr/local/bin/moviebox");
     assert!(!is_homebrew_managed(standard_user_path));
 }
 
@@ -355,7 +348,7 @@ async fn test_update_editing_mode_input_isolation() {
     let mut app = App::new();
     app.state_mut().update_available =
         Some(("0.1.16".to_string(), "New release notes".to_string()));
-    app.state_mut().input_mode = moviebox_tui::tui::state::InputMode::Editing;
+    app.state_mut().input_mode = moviebox::tui::state::InputMode::Editing;
 
     let u_key = crossterm::event::KeyEvent::new(
         crossterm::event::KeyCode::Char('u'),

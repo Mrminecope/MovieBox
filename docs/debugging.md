@@ -6,18 +6,18 @@ only shows a short status line. See [logging.md](logging.md) for location and se
 ## Reproducing an issue
 
 1. Run with debug logging:
-   `MOVIEBOX_LOG=debug moviebox-tui`
+   `MOVIEBOX_LOG=debug moviebox`
 2. Reproduce the problem (search, open details, play, download, TV).
 3. Grab the current log file (path printed at startup, and in the log's session header):
-   - macOS: `~/Library/Application Support/moviebox-tui/logs/moviebox-tui_rCURRENT.log`
-   - Windows: `%LOCALAPPDATA%\moviebox-tui\logs\moviebox-tui_rCURRENT.log`
-   - Linux: `$XDG_DATA_HOME/moviebox-tui/logs/moviebox-tui_rCURRENT.log`
-     (else `~/.local/share/moviebox-tui/logs/moviebox-tui_rCURRENT.log`)
+   - macOS: `~/Library/Application Support/moviebox/logs/moviebox_rCURRENT.log`
+   - Windows: `%LOCALAPPDATA%\moviebox\logs\moviebox_rCURRENT.log`
+   - Linux: `$XDG_DATA_HOME/moviebox/logs/moviebox_rCURRENT.log`
+     (else `~/.local/share/moviebox/logs/moviebox_rCURRENT.log`)
 4. Include it when opening an issue.
 
 ## What to include in a GitHub issue
 
-- The version (`moviebox-tui --version`).
+- The version (`moviebox --version`).
 - Operating system and terminal (e.g. macOS + iTerm2, Windows + Windows Terminal,
   Termux).
 - The player used, if the issue is playback.

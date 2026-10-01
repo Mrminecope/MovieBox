@@ -1,19 +1,19 @@
 <div align="center">
 
-# MovieBox-TUI
+# MovieBox
 
 **Terminal interface to find, download, and stream movies, TV shows, and live TV using local media players.**
 
 [ English ](README.md) • [ বাংলা ](README_BN.md) • [ हिन्दी ](README_HI.md) • [ Español ](README_ES.md)
 
-[![CI](https://img.shields.io/github/actions/workflow/status/mesamirh/MovieBox-Tui/ci.yml?branch=main&label=CI&logo=github&style=flat)](https://github.com/mesamirh/MovieBox-Tui/actions/workflows/ci.yml)
-[![crates.io](https://img.shields.io/crates/v/moviebox-tui.svg?logo=rust&style=flat)](https://crates.io/crates/moviebox-tui)
+[![CI](https://img.shields.io/github/actions/workflow/status/Mrminecope/MovieBox/ci.yml?branch=main&label=CI&logo=github&style=flat)](https://github.com/Mrminecope/MovieBox/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/moviebox.svg?logo=rust&style=flat)](https://crates.io/crates/moviebox)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg?style=flat)](#license)
 [![Telegram](https://img.shields.io/badge/Telegram-Channel-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/getfromme)
 [![Support](https://img.shields.io/badge/Support-Crypto-F7931A?style=flat&logo=bitcoin&logoColor=white)](#optional-support)
 </div>
 
-[moviebox-tui-walkthrough.webm](https://github.com/user-attachments/assets/7554a7e5-6ff5-49ec-9d87-f821ea99950e)
+[moviebox-walkthrough.webm](https://github.com/user-attachments/assets/7554a7e5-6ff5-49ec-9d87-f821ea99950e)
 
 ## Features
 
@@ -39,28 +39,28 @@
 
 If you have [Homebrew](https://brew.sh/) on macOS:
 ```bash
-brew tap mesamirh/moviebox-tui https://github.com/mesamirh/MovieBox-Tui
-brew install moviebox-tui
+brew tap Mrminecope/moviebox https://github.com/Mrminecope/MovieBox
+brew install moviebox
 ```
 
-> **Note:** If Homebrew prompts for tap verification on initial install, run `brew trust mesamirh/moviebox-tui`.
+> **Note:** If Homebrew prompts for tap verification on initial install, run `brew trust Mrminecope/moviebox`.
 
 Direct install via Terminal (macOS & Linux, no package manager needed):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mrminecope/MovieBox/main/install.sh | bash
 ```
 
 ### Windows
 
 If you have [Scoop](https://scoop.sh/) (recommended):
 ```powershell
-scoop bucket add moviebox https://github.com/mesamirh/MovieBox-Tui
-scoop install moviebox-tui
+scoop bucket add moviebox https://github.com/Mrminecope/MovieBox
+scoop install moviebox
 ```
 
 Direct install via PowerShell (no package manager needed):
 ```powershell
-irm https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Mrminecope/MovieBox/main/install.ps1 | iex
 ```
 
 > **SmartScreen prompt:** If Windows displays *"Windows protected your PC"*, click **More info** → **Run anyway**.
@@ -68,7 +68,7 @@ irm https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.ps1 | i
 ### Android (Termux)
 ```bash
 pkg update && pkg install -y curl tar termux-tools termux-am
-curl -fsSL https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mrminecope/MovieBox/main/install.sh | bash
 termux-setup-storage
 ```
 
@@ -76,13 +76,13 @@ termux-setup-storage
 <summary><b>Cargo & Source Build</b></summary>
 
 ```bash
-cargo install moviebox-tui --locked
+cargo install moviebox --locked
 ```
 
 From source:
 ```bash
-git clone https://github.com/mesamirh/MovieBox-Tui.git
-cd MovieBox-Tui
+git clone https://github.com/Mrminecope/MovieBox.git
+cd MovieBox
 cargo build --release --locked
 ```
 
@@ -93,7 +93,7 @@ cargo build --release --locked
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
-gh attestation verify <archive-file> -R mesamirh/MovieBox-Tui
+gh attestation verify <archive-file> -R Mrminecope/MovieBox
 ```
 
 </details>
@@ -105,9 +105,9 @@ Re-run install command (`curl ... | bash` or `irm ... | iex`) and select `2) Uni
 
 Or via package manager:
 ```bash
-brew uninstall moviebox-tui     # Homebrew
-scoop uninstall moviebox-tui    # Scoop
-cargo uninstall moviebox-tui    # Cargo
+brew uninstall moviebox     # Homebrew
+scoop uninstall moviebox    # Scoop
+cargo uninstall moviebox    # Cargo
 ```
 
 </details>
@@ -115,7 +115,7 @@ cargo uninstall moviebox-tui    # Cargo
 ## Quick Start
 
 ```bash
-moviebox-tui
+moviebox
 ```
 
 - Type to search, press `Enter` to play.
@@ -123,7 +123,7 @@ moviebox-tui
 
 ## Documentation
 
-Full documentation at [**mesamirh.github.io/MovieBox-Tui**](https://mesamirh.github.io/MovieBox-Tui/) or [`docs/`](docs/):
+Full documentation at [**Mrminecope.github.io/MovieBox**](https://Mrminecope.github.io/MovieBox/) or [`docs/`](docs/):
 
 | Guide | Description |
 | :--- | :--- |
@@ -137,7 +137,7 @@ Full documentation at [**mesamirh.github.io/MovieBox-Tui**](https://mesamirh.git
 
 ## Contributing
 
-Review [CONTRIBUTING.md](CONTRIBUTING.md) before submitting pull requests. Report bugs via [GitHub Issues](https://github.com/mesamirh/MovieBox-Tui/issues).
+Review [CONTRIBUTING.md](CONTRIBUTING.md) before submitting pull requests. Report bugs via [GitHub Issues](https://github.com/Mrminecope/MovieBox/issues).
 
 <details>
 <summary><b>Support</b></summary>
@@ -162,4 +162,4 @@ Dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE).
 
 ## Disclaimer
 
-MovieBox-TUI does not host or store media. It plays publicly available streams. Users must comply with local laws.
+MovieBox does not host or store media. It plays publicly available streams. Users must comply with local laws.

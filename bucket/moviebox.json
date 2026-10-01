@@ -16,10 +16,7 @@
       "hash": "982107744d10e94c77184ff0b0c19a31212330e69b3c0b13fff2857ee5192dda"
     }
   },
-  "bin": [
-    ["moviebox.exe", "moviebox-tui"],
-    "moviebox.exe"
-  ],
+  "bin": "moviebox.exe",
   "checkver": "github",
   "autoupdate": {
     "architecture": {

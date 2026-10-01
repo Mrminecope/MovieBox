@@ -1,14 +1,14 @@
 # Testing & QA Architecture
 
-This document describes the testing architecture, quality assurance procedures, and validation guidelines for MovieBox-TUI.
+This document describes the testing architecture, quality assurance procedures, and validation guidelines for MovieBox.
 
 ## 1. Test Architecture
 
 The test suite runs in an isolated process sandbox (`TEST_SANDBOX_DIR` in `src/config.rs`) that redirects `config_dir()`, `data_dir()`, and `cache_dir()` to temporary directories and guards external browser launches (`open_external_url` in `src/net.rs`) so tests never read, mutate, or delete host user files (`~/.config`, `~/.local/share`, `~/.cache`).
-The MovieBox-TUI test architecture follows a strict separation of concerns:
+The MovieBox test architecture follows a strict separation of concerns:
 
 ```text
-MovieBox-TUI/
+MovieBox/
 ├── src/
 │   └── **/*.rs              # Pure algorithms & inline unit tests (#[cfg(test)])
 └── tests/
@@ -129,7 +129,7 @@ Because TUI and media player interactions depend on terminal capabilities and ex
 
 ## 5. Performance Verification & Benchmarking Guidelines
 
-All performance optimizations in MovieBox-TUI must be backed by empirical before-and-after measurements. Changes without quantitative verification must be classified as refactors or code cleanups, not performance improvements.
+All performance optimizations in MovieBox must be backed by empirical before-and-after measurements. Changes without quantitative verification must be classified as refactors or code cleanups, not performance improvements.
 
 ### A. Required Benchmark Measurements
 When submitting or claiming a performance improvement, measure and report exact deltas:
@@ -161,7 +161,7 @@ When submitting or claiming a performance improvement, measure and report exact 
    - Report: Number of disk reads/writes or HTTP requests saved per action.
 
 5. **Release Binary Footprint**:
-   - Measure stripped release binary size (`target/release/moviebox-tui`).
+   - Measure stripped release binary size (`target/release/moviebox`).
    - Report: Baseline size, optimized size, and exact byte/kilobyte delta.
 
 ### B. Standard Performance Reporting Format

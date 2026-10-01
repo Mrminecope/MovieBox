@@ -866,7 +866,7 @@ mod tests {
             Cow::Borrowed(b) => assert_eq!(b, "MovieBox"),
             Cow::Owned(_) => panic!("expected borrowed Cow for exact ascii string"),
         }
-        assert_eq!(truncate_width("MovieBox-Tui Terminal", 11), "MovieBox...");
+        assert_eq!(truncate_width("MovieBox Terminal", 11), "MovieBox...");
         assert_eq!(truncate_width("Short", 3), "...");
         assert_eq!(truncate_width("Short", 2), "..");
         assert_eq!(truncate_width("Short", 1), ".");

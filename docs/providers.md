@@ -1,6 +1,6 @@
 # Streaming Providers
 
-MovieBox-TUI searches and streams media across multiple independent providers.
+MovieBox searches and streams media across multiple independent providers.
 
 ## Available Providers
 
@@ -22,7 +22,7 @@ MovieBox-TUI searches and streams media across multiple independent providers.
 ## BDIX Network Detection
 
 If you are connected through a Bangladeshi ISP supporting BDIX:
-- MovieBox-TUI automatically tests local BDIX mirrors on startup and enables them if reachable.
+- MovieBox automatically tests local BDIX mirrors on startup and enables them if reachable.
 - You can manually re-test your connection anytime via `/settings` → **Maintenance** → **Re-check BDIX Network**.
 
 ## Provider Architecture (For Developers)

@@ -1,6 +1,6 @@
 # Cross-Platform Support
 
-MovieBox-TUI runs on **macOS**, **Linux**, **Windows**, and **Android (Termux)**.
+MovieBox runs on **macOS**, **Linux**, **Windows**, and **Android (Termux)**.
 
 ## Supported Operating Systems
 
@@ -9,7 +9,7 @@ MovieBox-TUI runs on **macOS**, **Linux**, **Windows**, and **Android (Termux)**
 - **Binaries**: Shipped as universal binaries supporting both Apple Silicon (`arm64`) and Intel (`x86_64`).
 
 ### Linux
-- **Media Players**: Native `mpv`, `VLC`, or Flatpaks (`flatpak run --file-forwarding --filesystem=xdg-cache/moviebox-tui:ro --filesystem=xdg-data/moviebox-tui --filesystem=/tmp:ro <app-id>`).
+- **Media Players**: Native `mpv`, `VLC`, or Flatpaks (`flatpak run --file-forwarding --filesystem=xdg-cache/moviebox:ro --filesystem=xdg-data/moviebox --filesystem=/tmp:ro <app-id>`).
 - **Binaries**: Static Musl executables compatible with glibc and musl systems across x86_64 and aarch64.
 
 ### Windows
@@ -25,7 +25,7 @@ MovieBox-TUI runs on **macOS**, **Linux**, **Windows**, and **Android (Termux)**
 
 ## Terminal Compatibility
 
-MovieBox-TUI automatically adapts to your terminal emulator:
+MovieBox automatically adapts to your terminal emulator:
 
 - **Images & Posters**: Automatically detects Kitty graphics, Sixel, and iTerm2 protocols (Ghostty, Kitty, WezTerm, iTerm2, foot, Alacritty, and Windows Terminal v1.22+). In Windows Terminal v1.22+, enable Sixel under **Settings → Profiles → Defaults → Advanced → Enable Sixel graphics** (or `"experimental.sixelSupport": true` in `settings.json`). Terminals without image support display clean text containers (`No Art`). Disable with `MOVIEBOX_NO_IMAGE=1` or force with `MOVIEBOX_IMAGE_PROTOCOL=sixel`.
 - **Colors & Themes**: Auto-detects 24-bit TrueColor, 256-color palettes, and high-contrast monochrome mode (`NO_COLOR=1`).

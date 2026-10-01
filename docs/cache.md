@@ -1,11 +1,11 @@
 # Binary Cache & Storage
 
-MovieBox-TUI uses a disk-backed binary MessagePack caching engine to minimize network requests while maintaining fast startup times.
+MovieBox uses a disk-backed binary MessagePack caching engine to minimize network requests while maintaining fast startup times.
 
 ## Cache Directory
 
-- **Linux / macOS / Termux**: `~/.cache/moviebox-tui/`
-- **Windows**: `%LOCALAPPDATA%\MovieBox-Tui\cache\`
+- **Linux / macOS / Termux**: `~/.cache/moviebox/`
+- **Windows**: `%LOCALAPPDATA%\MovieBox\cache\`
 
 Override with the `MOVIEBOX_CACHE_DIR` environment variable.
 

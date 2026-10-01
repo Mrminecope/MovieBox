@@ -1,5 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use moviebox_tui::{
+use moviebox::{
     player::PlayerKind,
     tui::{
         action::Action,
@@ -91,7 +91,7 @@ async fn test_settings_modes_toggle_keeps_popup_open() {
     app.state_mut().tv_enabled = true;
     app.state_mut().addons_enabled = true;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
 
     app.handle_action(Action::ToggleSettingsPopup).await;
     assert!(app.state().show_settings_popup);
@@ -128,7 +128,7 @@ async fn test_settings_modes_toggle_keeps_popup_open() {
     assert!(app.state().show_settings_popup);
 
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().streaming_enabled = true;
     app.state_mut().tv_enabled = true;
     app.state_mut().addons_enabled = true;
@@ -259,7 +259,7 @@ async fn test_settings_hub_clear_cache_activation_and_notification() {
     assert!(!app.state().show_settings_popup);
     assert_eq!(
         app.state().active_screen,
-        moviebox_tui::tui::state::Screen::Home
+        moviebox::tui::state::Screen::Home
     );
 
     app.handle_action(Action::CacheCleared(Ok(()))).await;
@@ -293,7 +293,7 @@ async fn test_settings_hub_browser_open_row_activation() {
 #[tokio::test]
 async fn test_settings_hub_clear_watch_history_activation() {
     let mut app = App::new();
-    let item = moviebox_tui::history::WatchHistoryItem {
+    let item = moviebox::history::WatchHistoryItem {
         provider: "moviebox".to_string(),
         subject_id: "test-subj-1".to_string(),
         title: "Test Movie".to_string(),

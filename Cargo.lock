@@ -1478,7 +1478,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "moviebox-tui"
+name = "moviebox"
 version = "0.1.26"
 dependencies = [
  "base64 0.23.1",

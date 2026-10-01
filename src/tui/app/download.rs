@@ -1466,7 +1466,7 @@ mod tests {
     }
     #[test]
     fn test_download_directory_and_filename_conventions() {
-        let base_dir = std::path::PathBuf::from("/tmp/MovieBox-TUI");
+        let base_dir = std::path::PathBuf::from("/tmp/MovieBox");
 
         let movie_title = "Ek Deewane Ki Deewaniyat";
         let (movie_target, movie_base) =

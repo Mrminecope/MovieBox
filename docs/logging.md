@@ -5,12 +5,12 @@ statuses, content-types) are recorded and can be shared.
 
 ## Location
 
-- macOS: `~/Library/Application Support/moviebox-tui/logs/`
-- Windows: `%LOCALAPPDATA%\moviebox-tui\logs\`
-- Linux: `$XDG_DATA_HOME/moviebox-tui/logs/` (else `~/.local/share/moviebox-tui/logs/`)
+- macOS: `~/Library/Application Support/moviebox/logs/`
+- Windows: `%LOCALAPPDATA%\moviebox\logs\`
+- Linux: `$XDG_DATA_HOME/moviebox/logs/` (else `~/.local/share/moviebox/logs/`)
 
-The active file is `moviebox-tui_rCURRENT.log`; rotated files are
-`moviebox-tui_r00000.log`, `…`.
+The active file is `moviebox_rCURRENT.log`; rotated files are
+`moviebox_r00000.log`, `…`.
 
 ## Behavior
 

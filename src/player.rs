@@ -202,8 +202,8 @@ fn build_player_process_command(executable: &str) -> Command {
         let mut cmd = Command::new("flatpak");
         cmd.arg("run")
             .arg("--file-forwarding")
-            .arg("--filesystem=xdg-cache/moviebox-tui:ro")
-            .arg("--filesystem=xdg-data/moviebox-tui")
+            .arg("--filesystem=xdg-cache/moviebox:ro")
+            .arg("--filesystem=xdg-data/moviebox")
             .arg("--filesystem=/tmp:ro")
             .args(rest.split_whitespace());
         cmd
@@ -212,8 +212,8 @@ fn build_player_process_command(executable: &str) -> Command {
         let mut cmd = Command::new("flatpak");
         cmd.arg("run")
             .arg("--file-forwarding")
-            .arg("--filesystem=xdg-cache/moviebox-tui:ro")
-            .arg("--filesystem=xdg-data/moviebox-tui")
+            .arg("--filesystem=xdg-cache/moviebox:ro")
+            .arg("--filesystem=xdg-data/moviebox")
             .arg("--filesystem=/tmp:ro")
             .arg(app_id);
         cmd
@@ -221,8 +221,8 @@ fn build_player_process_command(executable: &str) -> Command {
         let mut cmd = Command::new("flatpak");
         cmd.arg("run")
             .arg("--file-forwarding")
-            .arg("--filesystem=xdg-cache/moviebox-tui:ro")
-            .arg("--filesystem=xdg-data/moviebox-tui")
+            .arg("--filesystem=xdg-cache/moviebox:ro")
+            .arg("--filesystem=xdg-data/moviebox")
             .arg("--filesystem=/tmp:ro")
             .arg(executable);
         cmd
@@ -326,11 +326,18 @@ pub fn probe_android_openers() -> Vec<AndroidOpener> {
     openers
 }
 
+#[cfg(not(test))]
 static ANDROID_OPENERS: std::sync::LazyLock<Vec<AndroidOpener>> =
     std::sync::LazyLock::new(probe_android_openers);
 
+#[cfg(not(test))]
 pub fn android_openers() -> &'static [AndroidOpener] {
     ANDROID_OPENERS.as_slice()
+}
+
+#[cfg(test)]
+pub fn android_openers() -> Vec<AndroidOpener> {
+    probe_android_openers()
 }
 
 fn append_android_intent_extras(
@@ -1565,20 +1572,21 @@ mod tests {
 
     #[test]
     fn test_format_mpv_script_opts_windows_paths() {
-        let win_path = PathBuf::from(
-            r"C:\Users\User\AppData\Local\MovieBox-Tui\playback\moviebox_123_1_1.json",
-        );
+        let win_path =
+            PathBuf::from(r"C:\Users\User\AppData\Local\MovieBox\playback\moviebox_123_1_1.json");
         let opts = format_mpv_script_opts("moviebox", "123", 1, 1, &win_path);
         assert!(!opts.contains(r"\"));
-        assert!(opts.contains("moviebox-state_file=C:/Users/User/AppData/Local/MovieBox-Tui/playback/moviebox_123_1_1.json"));
+        assert!(opts.contains("moviebox-state_file=C:/Users/User/AppData/Local/MovieBox/playback/moviebox_123_1_1.json"));
     }
 
     #[test]
     fn test_format_mpv_script_opts_unix_paths() {
         let unix_path =
-            PathBuf::from("/home/user/.local/share/moviebox-tui/playback/moviebox_123_1_1.json");
+            PathBuf::from("/home/user/.local/share/moviebox/playback/moviebox_123_1_1.json");
         let opts = format_mpv_script_opts("moviebox", "123", 1, 1, &unix_path);
-        assert!(opts.contains("moviebox-state_file=/home/user/.local/share/moviebox-tui/playback/moviebox_123_1_1.json"));
+        assert!(opts.contains(
+            "moviebox-state_file=/home/user/.local/share/moviebox/playback/moviebox_123_1_1.json"
+        ));
     }
 
     #[test]
@@ -1617,8 +1625,8 @@ mod tests {
     #[test]
     fn vlc_command_preserves_windows_native_subtitle_separators() {
         for input in [
-            r"C:\Users\User\AppData\Local\MovieBox-Tui\subs\sub.srt",
-            "C:/Users/User/AppData/Local/MovieBox-Tui/subs/sub.srt",
+            r"C:\Users\User\AppData\Local\MovieBox\subs\sub.srt",
+            "C:/Users/User/AppData/Local/MovieBox/subs/sub.srt",
         ] {
             let command = vlc_command(
                 "https://example.test/video.mp4",
@@ -1632,9 +1640,11 @@ mod tests {
                 .get_args()
                 .map(|arg| arg.to_string_lossy().into_owned())
                 .collect::<Vec<_>>();
-            assert!(args.contains(
-                &r"--sub-file=C:\Users\User\AppData\Local\MovieBox-Tui\subs\sub.srt".into()
-            ));
+            assert!(
+                args.contains(
+                    &r"--sub-file=C:\Users\User\AppData\Local\MovieBox\subs\sub.srt".into()
+                )
+            );
         }
     }
     #[test]
@@ -1912,8 +1922,9 @@ mod tests {
 
     #[test]
     fn test_mpv_command_headers_and_arguments_assembly() {
+        let _lock = ENV_MUTEX.lock().unwrap_or_else(|e| e.into_inner());
         let headers = vec![
-            ("User-Agent".to_string(), "MovieBox-Tui/0.1.23".to_string()),
+            ("User-Agent".to_string(), "MovieBox/0.1.23".to_string()),
             ("Referer".to_string(), "https://upstream.cdn/".to_string()),
             ("Origin".to_string(), "https://upstream.cdn".to_string()),
         ];
@@ -2110,8 +2121,8 @@ mod tests {
             vec![
                 "run",
                 "--file-forwarding",
-                "--filesystem=xdg-cache/moviebox-tui:ro",
-                "--filesystem=xdg-data/moviebox-tui",
+                "--filesystem=xdg-cache/moviebox:ro",
+                "--filesystem=xdg-data/moviebox",
                 "--filesystem=/tmp:ro",
                 "--user",
                 "org.videolan.VLC",
@@ -2124,6 +2135,6 @@ mod tests {
             .map(|a| a.to_string_lossy().into_owned())
             .collect();
         assert_eq!(export_args.last().map(String::as_str), Some("io.mpv.Mpv"));
-        assert!(export_args.contains(&"--filesystem=xdg-data/moviebox-tui".to_string()));
+        assert!(export_args.contains(&"--filesystem=xdg-data/moviebox".to_string()));
     }
 }

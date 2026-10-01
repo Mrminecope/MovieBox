@@ -1,4 +1,4 @@
-use moviebox_tui::history::WatchHistoryItem;
+use moviebox::history::WatchHistoryItem;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -49,3 +49,4 @@ pub fn make_history_item(
         completed: false,
     }
 }
+

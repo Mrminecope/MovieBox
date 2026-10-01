@@ -303,21 +303,21 @@ impl App {
                 crate::tui::state::AppMode::Streaming => {
                     if self.state.active_provider == crate::providers::models::ProviderKind::Addons
                     {
-                        "MovieBox-Tui — Addons".to_string()
+                        "MovieBox — Addons".to_string()
                     } else {
-                        "MovieBox-Tui — Streaming".to_string()
+                        "MovieBox — Streaming".to_string()
                     }
                 }
-                crate::tui::state::AppMode::Tv => "MovieBox-Tui — Live TV".to_string(),
+                crate::tui::state::AppMode::Tv => "MovieBox — Live TV".to_string(),
             },
             Screen::Details => {
                 if let Some(details) = &self.state.selected_details {
                     let clean = crate::providers::moviebox::clean_moviebox_title(&details.title);
                     if !clean.is_empty() {
-                        return format!("MovieBox-Tui — {clean}");
+                        return format!("MovieBox — {clean}");
                     }
                 }
-                "MovieBox-Tui — Details".to_string()
+                "MovieBox — Details".to_string()
             }
         }
     }
@@ -1256,7 +1256,7 @@ impl App {
                         Span::raw("  "),
                         Span::styled("Homebrew Managed • Run: ", self.theme.text_dim),
                         Span::styled(
-                            "brew upgrade moviebox-tui",
+                            "brew upgrade moviebox",
                             self.theme
                                 .shortcut
                                 .add_modifier(ratatui::style::Modifier::BOLD),
@@ -1269,7 +1269,7 @@ impl App {
                         Span::raw("  "),
                         Span::styled("Scoop Managed • Run: ", self.theme.text_dim),
                         Span::styled(
-                            "scoop update moviebox-tui",
+                            "scoop update moviebox",
                             self.theme
                                 .shortcut
                                 .add_modifier(ratatui::style::Modifier::BOLD),
@@ -1298,7 +1298,7 @@ impl App {
                     text.push(Line::from(vec![
                         Span::raw("  "),
                         Span::styled(
-                            "Snap sandbox • Run: sudo snap refresh moviebox-tui",
+                            "Snap sandbox • Run: sudo snap refresh moviebox",
                             self.theme.accent,
                         ),
                     ]));

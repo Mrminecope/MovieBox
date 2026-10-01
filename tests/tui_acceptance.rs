@@ -1,10 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use moviebox_tui::models::SearchResult;
-use moviebox_tui::providers::models::ProviderKind;
-use moviebox_tui::tui::action::Action;
-use moviebox_tui::tui::app::App;
-use moviebox_tui::tui::state::{InputMode, Screen};
-use moviebox_tui::tui::theme::ThemeKind;
+use moviebox::models::SearchResult;
+use moviebox::providers::models::ProviderKind;
+use moviebox::tui::action::Action;
+use moviebox::tui::app::App;
+use moviebox::tui::state::{InputMode, Screen};
+use moviebox::tui::theme::ThemeKind;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 
@@ -180,13 +180,13 @@ async fn test_mouse_click_search_input_mode() {
     let cols = if cols == 0 { 80 } else { cols };
     let rows = if rows == 0 { 24 } else { rows };
     let area = ratatui::layout::Rect::new(0, 0, cols, rows);
-    let (_, landing_rows) = moviebox_tui::tui::screens::home::landing_split(
+    let (_, landing_rows) = moviebox::tui::screens::home::landing_split(
         area,
         app.state().is_tv_mode,
         app.state().basic_terminal,
         app.state().favorites_landing_visible(),
     );
-    let card_w = moviebox_tui::tui::screens::home::search_deck_width(area, app.state(), true);
+    let card_w = moviebox::tui::screens::home::search_deck_width(area, app.state(), true);
     let card_x = area.x + area.width.saturating_sub(card_w) / 2;
     let search_y = landing_rows.rects[landing_rows.search].y + 1;
 
@@ -201,12 +201,12 @@ async fn test_mouse_click_favorites_item_focuses_and_selects() {
     app.state_mut().is_tv_mode = false;
     app.state_mut().streaming_enabled = true;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().favorites.clear();
     app.state_mut()
         .favorites
         .items
-        .push(moviebox_tui::favorites::FavoriteItem {
+        .push(moviebox::favorites::FavoriteItem {
             provider: "moviebox".to_string(),
             subject_id: "fav-1".to_string(),
             title: "Inception".to_string(),
@@ -220,13 +220,13 @@ async fn test_mouse_click_favorites_item_focuses_and_selects() {
     let cols = if cols == 0 { 80 } else { cols };
     let rows = if rows == 0 { 24 } else { rows };
     let area = ratatui::layout::Rect::new(0, 0, cols, rows);
-    let (_, landing_rows) = moviebox_tui::tui::screens::home::landing_split(
+    let (_, landing_rows) = moviebox::tui::screens::home::landing_split(
         area,
         app.state().is_tv_mode,
         app.state().basic_terminal,
         app.state().favorites_landing_visible(),
     );
-    let card_w = moviebox_tui::tui::screens::home::search_deck_width(area, app.state(), true);
+    let card_w = moviebox::tui::screens::home::search_deck_width(area, app.state(), true);
     let card_x = area.x + area.width.saturating_sub(card_w) / 2;
     let item_0_y = landing_rows.rects[landing_rows.favorites].y + 1;
 
@@ -247,7 +247,7 @@ async fn test_mouse_click_search_suggestion_selects_query() {
     let area = ratatui::layout::Rect::new(0, 0, 80, 24);
     let search_bar_area = ratatui::layout::Rect::new(10, 5, 60, 3);
     let (_container, inner) =
-        moviebox_tui::tui::screens::home::search_suggestions_bounds(area, search_bar_area, 2);
+        moviebox::tui::screens::home::search_suggestions_bounds(area, search_bar_area, 2);
 
     app.handle_action(Action::MouseClick(inner.x, inner.y))
         .await;
@@ -393,14 +393,14 @@ async fn test_tv_mode_search_isolated_to_channels() {
     app.state_mut().tv_enabled = true;
     app.state_mut().is_tv_mode = true;
     app.state_mut().tv_channels = vec![
-        moviebox_tui::providers::tv::Channel {
+        moviebox::providers::tv::Channel {
             id: "ch1".to_string(),
             name: "Deepto TV".to_string(),
             stream_url: "https://example.com/deepto.m3u8".to_string(),
             group: "Bangla".to_string(),
             logo: "https://example.com/deepto.png".to_string(),
         },
-        moviebox_tui::providers::tv::Channel {
+        moviebox::providers::tv::Channel {
             id: "ch2".to_string(),
             name: "Somoy TV".to_string(),
             stream_url: "https://example.com/somoy.m3u8".to_string(),
@@ -437,7 +437,7 @@ async fn test_tv_mode_no_provider_badge_and_single_clear_button() {
     app.state_mut().tv_enabled = true;
     app.state_mut().is_tv_mode = true;
     app.state_mut().active_screen = Screen::Home;
-    app.state_mut().tv_channels = vec![moviebox_tui::providers::tv::Channel {
+    app.state_mut().tv_channels = vec![moviebox::providers::tv::Channel {
         id: "ch1".to_string(),
         name: "Deepto TV".to_string(),
         stream_url: "https://example.com/deepto.m3u8".to_string(),
@@ -587,7 +587,7 @@ async fn test_f_key_toggles_favorite_on_home_results() {
     app.state_mut().is_tv_mode = false;
     app.state_mut().streaming_enabled = true;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().favorites.clear();
     let res = SearchResult {
         id: "100".to_string(),
@@ -602,7 +602,7 @@ async fn test_f_key_toggles_favorite_on_home_results() {
     app.state_mut().search_results.push(res.clone());
     app.state_mut().search_list_state.select(Some(0));
 
-    let identity = moviebox_tui::models::SubjectIdentity {
+    let identity = moviebox::models::SubjectIdentity {
         provider: res.provider.cache_key(),
         subject_id: &res.id,
         title: &res.title,
@@ -671,27 +671,26 @@ async fn test_contextual_window_title() {
     let mut app = App::new();
     app.state_mut().active_screen = Screen::Home;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
-    app.state_mut().active_provider = moviebox_tui::providers::models::ProviderKind::MovieBox;
-    assert_eq!(app.contextual_title(), "MovieBox-Tui — Streaming");
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
+    app.state_mut().active_provider = moviebox::providers::models::ProviderKind::MovieBox;
+    assert_eq!(app.contextual_title(), "MovieBox — Streaming");
+
+    app.state_mut().set_mode(moviebox::tui::state::AppMode::Tv);
+    assert_eq!(app.contextual_title(), "MovieBox — Live TV");
 
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Tv);
-    assert_eq!(app.contextual_title(), "MovieBox-Tui — Live TV");
-
-    app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
-    app.state_mut().active_provider = moviebox_tui::providers::models::ProviderKind::Addons;
-    assert_eq!(app.contextual_title(), "MovieBox-Tui — Addons");
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
+    app.state_mut().active_provider = moviebox::providers::models::ProviderKind::Addons;
+    assert_eq!(app.contextual_title(), "MovieBox — Addons");
 
     app.state_mut().active_screen = Screen::Details;
-    app.state_mut().selected_details = Some(moviebox_tui::models::MediaDetails {
-        id: moviebox_tui::models::ProviderMediaId {
-            provider: moviebox_tui::models::ProviderKind::MovieBox,
+    app.state_mut().selected_details = Some(moviebox::models::MediaDetails {
+        id: moviebox::models::ProviderMediaId {
+            provider: moviebox::models::ProviderKind::MovieBox,
             value: "1".to_string(),
         },
         title: "Inception".to_string(),
-        media_type: moviebox_tui::models::MediaType::Movie,
+        media_type: moviebox::models::MediaType::Movie,
         year: None,
         description: None,
         tagline: None,
@@ -706,7 +705,7 @@ async fn test_contextual_window_title() {
         seasons: vec![],
         dubs: vec![],
     });
-    assert_eq!(app.contextual_title(), "MovieBox-Tui — Inception");
+    assert_eq!(app.contextual_title(), "MovieBox — Inception");
 }
 #[tokio::test]
 async fn test_esc_in_normal_mode_focuses_search_bar_when_results_present() {
@@ -826,7 +825,7 @@ async fn test_history_item_space_and_p_key_direct_resume() {
     let mut app = App::new();
     app.state_mut().is_tv_mode = false;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().active_screen = Screen::Home;
     app.state_mut().input_mode = InputMode::Normal;
     app.state_mut().search_query.set_content("/history");
@@ -859,7 +858,7 @@ async fn test_history_item_enter_pre_seeds_season_and_episode() {
     let mut app = App::new();
     app.state_mut().is_tv_mode = false;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().active_screen = Screen::Home;
     app.state_mut().input_mode = InputMode::Normal;
     app.state_mut().search_query.set_content("/history");
@@ -928,8 +927,8 @@ async fn test_no_results_and_error_state_rendering_hints() {
     app.state_mut().input_mode = InputMode::Normal;
     app.state_mut().has_search_settled = true;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
-    app.state_mut().active_provider = moviebox_tui::providers::models::ProviderKind::MovieBox;
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
+    app.state_mut().active_provider = moviebox::providers::models::ProviderKind::MovieBox;
     app.state_mut()
         .search_query
         .set_content("nonexistent_movie_xyz");
@@ -958,20 +957,19 @@ async fn test_ctrl_p_scoped_strictly_to_streaming_mode() {
     );
 
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     let initial_provider = app.state().active_provider;
     app.handle_action(Action::Key(ctrl_p)).await;
     assert_ne!(app.state().active_provider, initial_provider);
 
-    app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Tv);
+    app.state_mut().set_mode(moviebox::tui::state::AppMode::Tv);
     app.state_mut().is_tv_mode = true;
     app.state_mut().tv_enabled = true;
     app.state_mut().tv_config_popup = false;
     app.handle_action(Action::Key(ctrl_p)).await;
     assert!(!app.state().tv_config_popup);
 
-    app.state_mut().active_provider = moviebox_tui::providers::models::ProviderKind::Addons;
+    app.state_mut().active_provider = moviebox::providers::models::ProviderKind::Addons;
     app.state_mut().is_tv_mode = false;
     app.state_mut().addons_enabled = true;
     app.state_mut().addon_manager_popup = false;
@@ -1019,7 +1017,7 @@ async fn test_tui_layout_truncation_and_bounds() {
         app.state_mut().download_progress = None;
     }
 
-    let tier = moviebox_tui::tui::screens::details::DetailsLayoutTier::Narrow;
+    let tier = moviebox::tui::screens::details::DetailsLayoutTier::Narrow;
     assert_eq!(tier.footer_height(70), 2);
     assert_eq!(tier.footer_height(79), 2);
     assert_eq!(tier.footer_height(80), 1);
@@ -1034,14 +1032,14 @@ async fn test_home_deck_tab_switching() {
     app.state_mut().streaming_enabled = true;
     app.state_mut().is_tv_mode = false;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().history.recent.clear();
     app.state_mut().favorites.clear();
 
     app.state_mut()
         .history
         .recent
-        .push(moviebox_tui::history::WatchHistoryItem {
+        .push(moviebox::history::WatchHistoryItem {
             provider: "moviebox".to_string(),
             subject_id: "show_1".to_string(),
             title: "Severance".to_string(),
@@ -1059,7 +1057,7 @@ async fn test_home_deck_tab_switching() {
     app.state_mut()
         .favorites
         .items
-        .push(moviebox_tui::favorites::FavoriteItem {
+        .push(moviebox::favorites::FavoriteItem {
             provider: "moviebox".to_string(),
             subject_id: "fav_1".to_string(),
             title: "Inception".to_string(),
@@ -1074,7 +1072,7 @@ async fn test_home_deck_tab_switching() {
     assert!(app.state().landing_deck_visible());
     assert_eq!(
         app.state().effective_home_deck_tab(),
-        moviebox_tui::tui::state::HomeDeckTab::ContinueWatching
+        moviebox::tui::state::HomeDeckTab::ContinueWatching
     );
 
     let tab_key = crossterm::event::KeyEvent::new(
@@ -1084,7 +1082,7 @@ async fn test_home_deck_tab_switching() {
     app.handle_action(Action::Key(tab_key)).await;
     assert_eq!(
         app.state().effective_home_deck_tab(),
-        moviebox_tui::tui::state::HomeDeckTab::Favorites
+        moviebox::tui::state::HomeDeckTab::Favorites
     );
 
     let backtab_key = crossterm::event::KeyEvent::new(
@@ -1094,7 +1092,7 @@ async fn test_home_deck_tab_switching() {
     app.handle_action(Action::Key(backtab_key)).await;
     assert_eq!(
         app.state().effective_home_deck_tab(),
-        moviebox_tui::tui::state::HomeDeckTab::ContinueWatching
+        moviebox::tui::state::HomeDeckTab::ContinueWatching
     );
 
     app.state_mut().favorites_focus = true;
@@ -1102,12 +1100,12 @@ async fn test_home_deck_tab_switching() {
     app.handle_action(Action::MoveRight).await;
     assert_eq!(
         app.state().effective_home_deck_tab(),
-        moviebox_tui::tui::state::HomeDeckTab::Favorites
+        moviebox::tui::state::HomeDeckTab::Favorites
     );
     app.handle_action(Action::MoveLeft).await;
     assert_eq!(
         app.state().effective_home_deck_tab(),
-        moviebox_tui::tui::state::HomeDeckTab::ContinueWatching
+        moviebox::tui::state::HomeDeckTab::ContinueWatching
     );
 }
 
@@ -1153,14 +1151,14 @@ async fn test_home_deck_continue_watching_resume() {
     app.state_mut().streaming_enabled = true;
     app.state_mut().is_tv_mode = false;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().history.recent.clear();
     app.state_mut().favorites.clear();
 
     app.state_mut()
         .history
         .recent
-        .push(moviebox_tui::history::WatchHistoryItem {
+        .push(moviebox::history::WatchHistoryItem {
             provider: "moviebox".to_string(),
             subject_id: "cw_target".to_string(),
             title: "Severance".to_string(),
@@ -1180,7 +1178,7 @@ async fn test_home_deck_continue_watching_resume() {
     app.state_mut().favorites_landing_state.select(Some(0));
     assert_eq!(
         app.state().effective_home_deck_tab(),
-        moviebox_tui::tui::state::HomeDeckTab::ContinueWatching
+        moviebox::tui::state::HomeDeckTab::ContinueWatching
     );
 
     app.handle_action(Action::Submit).await;
@@ -1199,14 +1197,14 @@ async fn test_landing_deck_header_renders_without_star_or_bracket() {
     app.state_mut().streaming_enabled = true;
     app.state_mut().is_tv_mode = false;
     app.state_mut()
-        .set_mode(moviebox_tui::tui::state::AppMode::Streaming);
+        .set_mode(moviebox::tui::state::AppMode::Streaming);
     app.state_mut().history.recent.clear();
     app.state_mut().favorites.clear();
 
     app.state_mut()
         .history
         .recent
-        .push(moviebox_tui::history::WatchHistoryItem {
+        .push(moviebox::history::WatchHistoryItem {
             provider: "moviebox".to_string(),
             subject_id: "show_1".to_string(),
             title: "Severance".to_string(),
@@ -1224,7 +1222,7 @@ async fn test_landing_deck_header_renders_without_star_or_bracket() {
     app.state_mut()
         .favorites
         .items
-        .push(moviebox_tui::favorites::FavoriteItem {
+        .push(moviebox::favorites::FavoriteItem {
             provider: "moviebox".to_string(),
             subject_id: "fav_1".to_string(),
             title: "Inception".to_string(),

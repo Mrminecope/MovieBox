@@ -1,19 +1,19 @@
 <div align="center">
 
-# MovieBox-TUI
+# MovieBox
 
 **লোকাল মিডিয়া প্লেয়ার দিয়ে মুভি, টিভি শো এবং লাইভ টিভি খোঁজা, ডাউনলোড ও স্ট্রিম করার টার্মিনাল ইন্টারফেস।**
 
 [ English ](README.md) • [ বাংলা ](README_BN.md) • [ हिन्दी ](README_HI.md) • [ Español ](README_ES.md)
 
-[![CI](https://img.shields.io/github/actions/workflow/status/mesamirh/MovieBox-Tui/ci.yml?branch=main&label=CI&logo=github&style=flat)](https://github.com/mesamirh/MovieBox-Tui/actions/workflows/ci.yml)
-[![crates.io](https://img.shields.io/crates/v/moviebox-tui.svg?logo=rust&style=flat)](https://crates.io/crates/moviebox-tui)
+[![CI](https://img.shields.io/github/actions/workflow/status/Mrminecope/MovieBox/ci.yml?branch=main&label=CI&logo=github&style=flat)](https://github.com/Mrminecope/MovieBox/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/moviebox.svg?logo=rust&style=flat)](https://crates.io/crates/moviebox)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg?style=flat)](#license)
 [![Telegram](https://img.shields.io/badge/Telegram-Channel-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/getfromme)
 [![Support](https://img.shields.io/badge/Support-Crypto-F7931A?style=flat&logo=bitcoin&logoColor=white)](#optional-support)
 </div>
 
-[moviebox-tui-walkthrough.webm](https://github.com/user-attachments/assets/7554a7e5-6ff5-49ec-9d87-f821ea99950e)
+[moviebox-walkthrough.webm](https://github.com/user-attachments/assets/7554a7e5-6ff5-49ec-9d87-f821ea99950e)
 
 ## মূল সুবিধাসমূহ
 
@@ -39,28 +39,28 @@
 
 আপনার সিস্টেমে [Homebrew](https://brew.sh/) থাকলে (macOS):
 ```bash
-brew tap mesamirh/moviebox-tui https://github.com/mesamirh/MovieBox-Tui
-brew install moviebox-tui
+brew tap Mrminecope/moviebox https://github.com/Mrminecope/MovieBox
+brew install moviebox
 ```
 
-> **নোট:** প্রথমবার ইনস্টলের সময় Homebrew যদি ট্যাপ ভেরিফিকেশন চায়, তবে `brew trust mesamirh/moviebox-tui` রান করুন।
+> **নোট:** প্রথমবার ইনস্টলের সময় Homebrew যদি ট্যাপ ভেরিফিকেশন চায়, তবে `brew trust Mrminecope/moviebox` রান করুন।
 
 সরাসরি টার্মিনাল দিয়ে ইনস্টল (macOS ও Linux, কোনো প্যাকেজ ম্যানেজার লাগবে না):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mrminecope/MovieBox/main/install.sh | bash
 ```
 
 ### Windows
 
 আপনার সিস্টেমে [Scoop](https://scoop.sh/) থাকলে (সুপারিশকৃত):
 ```powershell
-scoop bucket add moviebox https://github.com/mesamirh/MovieBox-Tui
-scoop install moviebox-tui
+scoop bucket add moviebox https://github.com/Mrminecope/MovieBox
+scoop install moviebox
 ```
 
 PowerShell স্ক্রিপ্ট দিয়ে সরাসরি ইনস্টল (কোনো প্যাকেজ ম্যানেজার লাগবে না):
 ```powershell
-irm https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Mrminecope/MovieBox/main/install.ps1 | iex
 ```
 
 > **SmartScreen প্রম্পট:** Windows যদি *"Windows protected your PC"* দেখায়, তবে **More info** → **Run anyway** এ ক্লিক করুন।
@@ -70,7 +70,7 @@ irm https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.ps1 | i
 Termux ওপেন করে রান করুন:
 ```bash
 pkg update && pkg install -y curl tar termux-tools termux-am
-curl -fsSL https://raw.githubusercontent.com/mesamirh/MovieBox-Tui/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mrminecope/MovieBox/main/install.sh | bash
 termux-setup-storage
 ```
 > [!IMPORTANT]
@@ -81,13 +81,13 @@ termux-setup-storage
 
 crates.io থেকে ইনস্টল:
 ```bash
-cargo install moviebox-tui --locked
+cargo install moviebox --locked
 ```
 
 সোর্স কোড থেকে কম্পাইল:
 ```bash
-git clone https://github.com/mesamirh/MovieBox-Tui.git
-cd MovieBox-Tui
+git clone https://github.com/Mrminecope/MovieBox.git
+cd MovieBox
 cargo build --release --locked
 ```
 
@@ -98,7 +98,7 @@ cargo build --release --locked
 
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
-gh attestation verify <archive-file> -R mesamirh/MovieBox-Tui
+gh attestation verify <archive-file> -R Mrminecope/MovieBox
 ```
 
 </details>
@@ -110,9 +110,9 @@ gh attestation verify <archive-file> -R mesamirh/MovieBox-Tui
 
 অথবা প্যাকেজ ম্যানেজারের মাধ্যমে:
 ```bash
-brew uninstall moviebox-tui     # Homebrew
-scoop uninstall moviebox-tui    # Scoop
-cargo uninstall moviebox-tui    # Cargo
+brew uninstall moviebox     # Homebrew
+scoop uninstall moviebox    # Scoop
+cargo uninstall moviebox    # Cargo
 ```
 
 </details>
@@ -120,7 +120,7 @@ cargo uninstall moviebox-tui    # Cargo
 ## কুইক স্টার্ট
 
 ```bash
-moviebox-tui
+moviebox
 ```
 
 - যেকোনো টাইটেল লিখে সার্চ করুন, প্লে করতে `Enter` চাপুন।
@@ -128,7 +128,7 @@ moviebox-tui
 
 ## ডকুমেন্টেশন
 
-বিস্তারিত গাইড ও আর্কিটেকচার সম্পর্কে জানতে ভিজিট করুন [**mesamirh.github.io/MovieBox-Tui**](https://mesamirh.github.io/MovieBox-Tui/) অথবা প্রজেক্টের [`docs/`](docs/) ডিরেক্টরি দেখুন:
+বিস্তারিত গাইড ও আর্কিটেকচার সম্পর্কে জানতে ভিজিট করুন [**Mrminecope.github.io/MovieBox**](https://Mrminecope.github.io/MovieBox/) অথবা প্রজেক্টের [`docs/`](docs/) ডিরেক্টরি দেখুন:
 
 | গাইড | বিবরণ |
 | :--- | :--- |
@@ -144,7 +144,7 @@ moviebox-tui
 
 প্রজেক্টে যেকোনো ধরনের অবদান সাদরে আমন্ত্রিত। পুল রিকোয়েস্ট পাঠানোর আগে [CONTRIBUTING.md](CONTRIBUTING.md) গাইডলাইনটি দেখে নিন।
 
-কোনো বাগ রিপোর্ট করতে বা নতুন ফিচারের অনুরোধ জানাতে [GitHub Issues](https://github.com/mesamirh/MovieBox-Tui/issues) ব্যবহার করুন।
+কোনো বাগ রিপোর্ট করতে বা নতুন ফিচারের অনুরোধ জানাতে [GitHub Issues](https://github.com/Mrminecope/MovieBox/issues) ব্যবহার করুন।
 
 <details>
 <summary><b>ঐচ্ছিক সহায়তা (Optional Support)</b></summary>
@@ -163,7 +163,7 @@ moviebox-tui
 
 ## গোপনীয়তা (Privacy)
 
-MovieBox-TUI সম্পূর্ণ টেলিমেট্রি ও ট্র্যাকিং মুক্ত। সমস্ত সার্চ হিস্ট্রি, বুকমার্ক এবং কনফিগারেশন ফাইল কেবল আপনার লোকাল ফাইলসিস্টেমেই সুরক্ষিত থাকে।
+MovieBox সম্পূর্ণ টেলিমেট্রি ও ট্র্যাকিং মুক্ত। সমস্ত সার্চ হিস্ট্রি, বুকমার্ক এবং কনফিগারেশন ফাইল কেবল আপনার লোকাল ফাইলসিস্টেমেই সুরক্ষিত থাকে।
 
 ## লাইসেন্স
 

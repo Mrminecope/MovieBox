@@ -1,4 +1,4 @@
-# Contributing to MovieBox-Tui
+# Contributing to MovieBox
 
 Thanks for taking the time to contribute. Bug reports, ideas, docs improvements, and pull requests are all welcome.
 
@@ -10,11 +10,11 @@ You'll need Rust **1.90 or newer** (edition 2024). Install it via [rustup.rs](ht
 
 ```bash
 # Fork on GitHub, then clone your fork
-git clone https://github.com/<your-username>/MovieBox-Tui.git
-cd MovieBox-Tui
+git clone https://github.com/<your-username>/MovieBox.git
+cd MovieBox
 
 # Add the upstream remote to keep in sync
-git remote add upstream https://github.com/mesamirh/MovieBox-Tui.git
+git remote add upstream https://github.com/Mrminecope/MovieBox.git
 
 # IMPORTANT: Enable our pre-commit hooks to ensure your code formatting and lints pass
 git config core.hooksPath .githooks

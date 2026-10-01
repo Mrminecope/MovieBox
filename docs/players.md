@@ -1,6 +1,6 @@
 # Players
 
-MovieBox-TUI delegates playback to external media players (`mpv`, `IINA`, `VLC`, or Android intent players).
+MovieBox delegates playback to external media players (`mpv`, `IINA`, `VLC`, or Android intent players).
 
 ## Detection Order
 
@@ -60,6 +60,6 @@ termux-open --chooser --content-type video/* <url>
 
 ## Spawning & Process Safety
 
-- Players and the `StreamRelay` sidecar launch in detached OS sessions (`libc::setsid()` with `SIGHUP` ignored on Unix/macOS/Linux/Android, and `DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP` on Windows) so closing the terminal or quitting `moviebox-tui` does not stop active video playback.
-- Player `stderr` writes to a temporary log file so `moviebox-tui` can exit without triggering `SIGPIPE` crashes while still capturing crash diagnostics when the TUI stays open.
+- Players and the `StreamRelay` sidecar launch in detached OS sessions (`libc::setsid()` with `SIGHUP` ignored on Unix/macOS/Linux/Android, and `DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP` on Windows) so closing the terminal or quitting `moviebox` does not stop active video playback.
+- Player `stderr` writes to a temporary log file so `moviebox` can exit without triggering `SIGPIPE` crashes while still capturing crash diagnostics when the TUI stays open.
 - Clean exits (VLC exit code `1` with empty stderr, or Unix `SIGTERM`) count as normal exits and update watch history without false crash popups.

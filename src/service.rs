@@ -550,14 +550,14 @@ pub fn ensure_moviebox_subdir(path: &Path) -> PathBuf {
         .file_name()
         .map(|name| {
             let s = name.to_string_lossy();
-            s.eq_ignore_ascii_case("MovieBox-TUI") || s.eq_ignore_ascii_case("MovieBox")
+            s.eq_ignore_ascii_case("MovieBox") || s.eq_ignore_ascii_case("MovieBox-TUI")
         })
         .unwrap_or(false);
 
     if is_already_mb {
         path.to_path_buf()
     } else {
-        path.join("MovieBox-TUI")
+        path.join("MovieBox")
     }
 }
 

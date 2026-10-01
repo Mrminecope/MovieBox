@@ -1,5 +1,5 @@
 [package]
-name = "moviebox-tui"
+name = "moviebox"
 exclude = [
     "docs/",
     "Formula/",
@@ -17,8 +17,8 @@ exclude = [
 version = "0.1.26"
 edition = "2024"
 description = "Terminal interface to find, download, and stream movies, TV shows, and live TV using local media players."
-repository = "https://github.com/mesamirh/MovieBox-Tui"
-homepage = "https://github.com/mesamirh/MovieBox-Tui"
+repository = "https://github.com/Mrminecope/MovieBox"
+homepage = "https://github.com/Mrminecope/MovieBox"
 license = "MIT OR Apache-2.0"
 keywords = ["tui", "moviebox", "streaming", "movies", "cli"]
 categories = ["command-line-utilities", "multimedia"]
@@ -62,7 +62,7 @@ zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
 tempfile = "3.17.1"
 
 [lib]
-name = "moviebox_tui"
+name = "moviebox"
 path = "src/lib.rs"
 
 [lints.clippy]

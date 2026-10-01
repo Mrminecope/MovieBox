@@ -46,7 +46,7 @@ Verify at least one real playback launch on each supported desktop OS:
 
 For each checked platform, confirm:
 
-- the player launches from MovieBox-Tui
+- the player launches from MovieBox
 - the window size is reasonable
 - playback works for a source with no extra headers
 - playback works for a source carrying `Referer` / `User-Agent`

@@ -17,7 +17,7 @@ Tracked here so future work and issue reports reference the same facts.
 
 - **4KHDHub mirrors rotate and can be expired on upstream hosts.** Direct streams are resolved concurrently across all available release mirrors using prioritized scoring (Cloudflare R2 / S3 / Seekable Streams → Storage → PixelDrain API → Google UserContent / Direct Attachments) and bounded concurrency (`select_ok` in chunks of 3). When all upstream mirrors for an older release are dead/expired (e.g. 404 or expired tokens), the resolver fails fast (<4.5s) and guides the user to select another release.
 - **Termux playback depends on Android intent dispatchers**: Verify `termux-open` / `am` availability and the Android player chooser behavior on target devices.
-- **Windows 11 Smart App Control (SAC) restricts untrusted web downloads.** Unsigned binaries downloaded via web browsers are tagged with `ZoneId=3` (Mark of the Web), causing Windows 11 SAC to block launch without a standard "Run anyway" button. The official installer (`install.ps1`) strips this tag automatically using `Unblock-File`. For manual ZIP downloads, users must unblock via file properties or `Unblock-File moviebox-tui.exe`.
+- **Windows 11 Smart App Control (SAC) restricts untrusted web downloads.** Unsigned binaries downloaded via web browsers are tagged with `ZoneId=3` (Mark of the Web), causing Windows 11 SAC to block launch without a standard "Run anyway" button. The official installer (`install.ps1`) strips this tag automatically using `Unblock-File`. For manual ZIP downloads, users must unblock via file properties or `Unblock-File moviebox.exe`.
 
 ## Verification
 

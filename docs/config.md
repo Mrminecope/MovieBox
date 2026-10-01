@@ -1,6 +1,6 @@
 # Configuration
 
-MovieBox-TUI stores its settings in `config.json` inside your platform configuration directory.
+MovieBox stores its settings in `config.json` inside your platform configuration directory.
 
 ## Interactive Settings Hub (`/settings`)
 
@@ -13,8 +13,8 @@ Enter `/settings` in the search bar or click `[ ⚙ Settings ]` on the Home scre
 
 ## Configuration File Paths
 
-- **Linux / macOS / Termux**: `~/.config/moviebox-tui/config.json`
-- **Windows**: `%APPDATA%\MovieBox-Tui\config.json`
+- **Linux / macOS / Termux**: `~/.config/moviebox/config.json`
+- **Windows**: `%APPDATA%\MovieBox\config.json`
 
 ## Configuration Options (`config.json`)
 
@@ -22,7 +22,7 @@ Enter `/settings` in the search bar or click `[ ⚙ Settings ]` on the Home scre
 | :--- | :--- | :--- | :--- |
 | `auto_update` | `bool` | `true` | Check for application updates on launch |
 | `default_player` | `string` | `"mpv"` | Default player (`"mpv"`, `"vlc"`, `"iina"`, `"android"`) |
-| `download_dir` | `string?` | `None` | Custom download directory (defaults to `~/Downloads/MovieBox-TUI`) |
+| `download_dir` | `string?` | `None` | Custom download directory (defaults to `~/Downloads/MovieBox`) |
 | `streaming_enabled` | `bool` | `true` | Enable on-demand streaming |
 | `tv_enabled` | `bool` | `true` | Enable live TV mode |
 | `addons_enabled` | `bool` | `false` | Enable Stremio Addons provider |

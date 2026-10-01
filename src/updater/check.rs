@@ -1,7 +1,7 @@
 use super::artifact::{Release, ReleaseAsset};
 
-pub const OWNER: &str = "mesamirh";
-pub const REPOSITORY: &str = "MovieBox-Tui";
+pub const OWNER: &str = "Mrminecope";
+pub const REPOSITORY: &str = "MovieBox";
 
 pub fn release_tag_url(tag: &str) -> String {
     let tag_clean = tag.trim_start_matches('v');
@@ -113,7 +113,7 @@ async fn fetch_latest_tag() -> Result<String, String> {
 }
 pub(crate) fn http_client() -> Result<reqwest::Client, String> {
     crate::net::http_client_builder()
-        .user_agent("MovieBox-Tui")
+        .user_agent("MovieBox")
         .timeout(std::time::Duration::from_secs(30))
         .connect_timeout(std::time::Duration::from_secs(10))
         .build()
@@ -122,7 +122,7 @@ pub(crate) fn http_client() -> Result<reqwest::Client, String> {
 
 pub(crate) fn download_client() -> Result<reqwest::Client, String> {
     crate::net::http_client_builder()
-        .user_agent("MovieBox-Tui")
+        .user_agent("MovieBox")
         .connect_timeout(std::time::Duration::from_secs(15))
         .build()
         .map_err(|e| format!("Download client: {e}"))
