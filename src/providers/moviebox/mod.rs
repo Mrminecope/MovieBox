@@ -133,13 +133,14 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
                     endpoint_errors.join("; ")
                 );
             }
-            return Err(ProviderError::Unavailable(
-                if endpoint_errors.is_empty() {
-                    "No stream sources available".to_string()
-                } else {
-                    format!("No stream sources available ({})", endpoint_errors.join("; "))
-                },
-            ));
+            return Err(ProviderError::Unavailable(if endpoint_errors.is_empty() {
+                "No stream sources available".to_string()
+            } else {
+                format!(
+                    "No stream sources available ({})",
+                    endpoint_errors.join("; ")
+                )
+            }));
         }
 
         releases.sort_by(|left, right| {
