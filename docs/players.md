@@ -35,6 +35,7 @@ mpv --autofit=WxH --geometry=50%:50% --hwdec=auto-safe --stream-buffer-size=4M -
 vlc --width=W --height=H --play-and-exit --no-one-instance --network-caching=3000 --file-caching=3000 --http-reconnect --adaptive-logic=predictive [OPTIONS] <url>
 ```
 - **Headers**: Mapped to `--http-user-agent` and `--http-referrer`.
+- **Fast-exit recovery**: If VLC closes within three seconds, MovieBox retries the same stream with MPV when MPV is installed; otherwise, the early exit is reported as a playback failure rather than a clean close.
 - **DASH & CloudFront Streams**: Cookie-authenticated and DASH `.mpd` streams route through the local `StreamRelay` proxy sidecar (`127.0.0.1:<port>`) with HTTP/1.1 persistent connections (`Keep-Alive`), parallel `95 KB` `Range`-chunked `.m4s` segment fetching, lookahead segment prefetching (`N+1..N+3`), and resolution representation capping.
 - **Subtitles**: Remote subtitles are pre-downloaded to temporary storage and passed via `--sub-file=<path>` using native Windows backslash separators (`C:\...`) on Windows and `--no-one-instance` on Windows/Linux so existing VLC instances do not strip CLI flags over IPC.
 

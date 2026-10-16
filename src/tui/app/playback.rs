@@ -576,125 +576,231 @@ impl App {
                         let error_output = std::fs::read_to_string(&log_path).unwrap_or_default();
                         let _ = std::fs::remove_file(&log_path);
 
-                        match &result {
-                            Ok(status)
-                                if status.success()
-                                    || is_vlc_normal_exit(
-                                        kind,
-                                        status.code(),
-                                        error_output.trim(),
-                                    )
-                                    || is_user_quit(status) =>
-                            {
-                                log::info!(
-                                    "player {kind:?} finished cleanly (code: {:?}, duration: {}s)",
-                                    status.code(),
-                                    start_time.elapsed().as_secs()
-                                );
-                                let has_tracker = tracker_opts.is_some()
-                                    && matches!(kind, crate::tui::state::PlayerKind::Mpv);
+                        let quick_vlc_failure =
+                            should_retry_vlc_with_mpv(kind, start_time.elapsed());
+                        let mut retried_with_mpv = false;
 
-                                if has_tracker {
-                                    sender.send(Action::ReconcileHistory).ok();
-                                } else if let Some(item) = history_item {
-                                    let elapsed = start_time.elapsed().as_secs();
-                                    if elapsed >= 30 {
-                                        let duration = item.duration_seconds;
-                                        let start_pos = resume_seconds.unwrap_or(0);
-                                        let total_pos = start_pos.saturating_add(elapsed);
-                                        let progress = if let Some(d) = duration {
-                                            total_pos.min(d)
-                                        } else {
-                                            total_pos
-                                        };
-                                        let completed = duration.is_some_and(|d| {
-                                            d > 0 && progress >= (d as f64 * 0.90) as u64
-                                        });
-                                        sender
-                                            .send(Action::UpdateProgress {
-                                                item: Box::new(item),
-                                                progress,
-                                                duration,
-                                                completed,
-                                            })
-                                            .ok();
+                        if quick_vlc_failure
+                            && crate::player::detect().contains(&crate::player::PlayerKind::Mpv)
+                        {
+                            let _ = sender.send(Action::SetStatus(
+                                "VLC closed immediately; retrying playback with MPV.".to_string(),
+                            ));
+                            log::warn!(
+                                "VLC closed after {}ms; retrying the same stream with MPV",
+                                start_time.elapsed().as_millis()
+                            );
+
+                            let fallback_log_path = log_path.with_extension("mpv-fallback.log");
+                            let fallback_tracker = tracker_opts.as_ref().map(
+                                |(provider, subject_id, season, episode)| {
+                                    (provider.as_str(), subject_id.as_str(), *season, *episode)
+                                },
+                            );
+                            let mut fallback_cmd = crate::tui::player::command(
+                                crate::tui::state::PlayerKind::Mpv,
+                                &fallback_link,
+                                fallback_sub.as_deref(),
+                                &fallback_headers,
+                                window,
+                                resume_seconds,
+                                fallback_tracker,
+                                max_height,
+                            );
+                            fallback_cmd.stdin(std::process::Stdio::null());
+                            fallback_cmd.stdout(std::process::Stdio::null());
+                            if let Ok(file) = std::fs::File::create(&fallback_log_path) {
+                                fallback_cmd.stderr(std::process::Stdio::from(file));
+                            } else {
+                                fallback_cmd.stderr(std::process::Stdio::null());
+                            }
+                            crate::player::configure_detached_process(&mut fallback_cmd);
+
+                            match fallback_cmd.spawn() {
+                                Ok(mut fallback_child) => {
+                                    retried_with_mpv = true;
+                                    let fallback_result = fallback_child.wait();
+                                    let fallback_error =
+                                        std::fs::read_to_string(&fallback_log_path)
+                                            .unwrap_or_default();
+                                    let _ = std::fs::remove_file(&fallback_log_path);
+
+                                    match fallback_result {
+                                        Ok(fallback_status) if fallback_status.success() => {
+                                            log::info!(
+                                                "MPV fallback finished (code: {:?}, total duration: {}s)",
+                                                fallback_status.code(),
+                                                start_time.elapsed().as_secs()
+                                            );
+                                            if tracker_opts.is_some() {
+                                                sender.send(Action::ReconcileHistory).ok();
+                                            }
+                                        }
+                                        Ok(fallback_status) => {
+                                            #[cfg(unix)]
+                                            let fallback_signal = {
+                                                use std::os::unix::process::ExitStatusExt;
+                                                fallback_status.signal()
+                                            };
+                                            #[cfg(not(unix))]
+                                            let fallback_signal = None;
+                                            let error = clean_player_error(
+                                                fallback_status.code(),
+                                                fallback_signal,
+                                                fallback_error.trim(),
+                                            );
+                                            sender
+                                                .send(Action::PlayerCrashed(
+                                                    fallback_status.code(),
+                                                    format!("VLC failed to start playback; MPV fallback also failed: {error}"),
+                                                ))
+                                                .ok();
+                                        }
+                                        Err(error) => {
+                                            sender
+                                                .send(Action::PlayerCrashed(
+                                                    None,
+                                                    format!("VLC failed to start playback; could not wait for MPV fallback: {error}"),
+                                                ))
+                                                .ok();
+                                        }
                                     }
                                 }
+                                Err(error) => {
+                                    log::warn!(
+                                        "failed to spawn MPV fallback after VLC exit: {error}"
+                                    );
+                                }
                             }
-                            Ok(status) => {
-                                let is_termux_socket_err = is_android
-                                    && (error_output.contains("am.sock")
-                                        || error_output.contains("Could not connect to socket")
-                                        || error_output.contains("termux-am"));
+                        }
 
-                                if is_termux_socket_err {
-                                    let secondary =
-                                        crate::player::android_openers()
-                                            .iter()
-                                            .find(|op| {
-                                                matches!(
-                                                op,
-                                                crate::player::AndroidOpener::TermuxOpen(_)
-                                                    | crate::player::AndroidOpener::TermuxOpenUrl(_)
-                                            )
-                                            })
-                                            .cloned();
-                                    if let Some(op) = secondary {
-                                        log::warn!(
-                                            "primary opener failed socket connection, retrying with fallback opener {op:?}"
-                                        );
-                                        let mut fallback_cmd =
-                                            crate::player::android_intent_command_for_opener(
-                                                &op,
-                                                &fallback_link,
-                                                fallback_sub.as_deref(),
-                                                &fallback_headers,
+                        if !retried_with_mpv {
+                            match &result {
+                                Ok(status)
+                                    if status.success()
+                                        || is_vlc_normal_exit(
+                                            kind,
+                                            status.code(),
+                                            error_output.trim(),
+                                            start_time.elapsed(),
+                                        )
+                                        || is_user_quit(status) =>
+                                {
+                                    log::info!(
+                                        "player {kind:?} finished cleanly (code: {:?}, duration: {}s)",
+                                        status.code(),
+                                        start_time.elapsed().as_secs()
+                                    );
+                                    let has_tracker = tracker_opts.is_some()
+                                        && matches!(kind, crate::tui::state::PlayerKind::Mpv);
+
+                                    if has_tracker {
+                                        sender.send(Action::ReconcileHistory).ok();
+                                    } else if let Some(item) = history_item {
+                                        let elapsed = start_time.elapsed().as_secs();
+                                        if elapsed >= 30 {
+                                            let duration = item.duration_seconds;
+                                            let start_pos = resume_seconds.unwrap_or(0);
+                                            let total_pos = start_pos.saturating_add(elapsed);
+                                            let progress = if let Some(d) = duration {
+                                                total_pos.min(d)
+                                            } else {
+                                                total_pos
+                                            };
+                                            let completed = duration.is_some_and(|d| {
+                                                d > 0 && progress >= (d as f64 * 0.90) as u64
+                                            });
+                                            sender
+                                                .send(Action::UpdateProgress {
+                                                    item: Box::new(item),
+                                                    progress,
+                                                    duration,
+                                                    completed,
+                                                })
+                                                .ok();
+                                        }
+                                    }
+                                }
+                                Ok(status) => {
+                                    let is_termux_socket_err = is_android
+                                        && (error_output.contains("am.sock")
+                                            || error_output
+                                                .contains("Could not connect to socket")
+                                            || error_output.contains("termux-am"));
+
+                                    if is_termux_socket_err {
+                                        let secondary =
+                                            crate::player::android_openers()
+                                                .iter()
+                                                .find(|op| {
+                                                    matches!(
+                                                    op,
+                                                    crate::player::AndroidOpener::TermuxOpen(_)
+                                                        | crate::player::AndroidOpener::TermuxOpenUrl(_)
+                                                )
+                                                })
+                                                .cloned();
+                                        if let Some(op) = secondary {
+                                            log::warn!(
+                                                "primary opener failed socket connection, retrying with fallback opener {op:?}"
                                             );
-                                        fallback_cmd.stdin(std::process::Stdio::null());
-                                        fallback_cmd.stdout(std::process::Stdio::null());
-                                        fallback_cmd.stderr(std::process::Stdio::null());
-                                        crate::player::configure_detached_process(
-                                            &mut fallback_cmd,
-                                        );
-                                        if let Ok(mut retry_child) = fallback_cmd.spawn() {
-                                            if let Ok(retry_status) = retry_child.wait() {
-                                                if retry_status.success() {
-                                                    log::info!(
-                                                        "fallback android opener {op:?} succeeded"
-                                                    );
-                                                    if let Some(path) = temporary_subtitle {
-                                                        let _ = std::fs::remove_file(path);
+                                            let mut fallback_cmd =
+                                                crate::player::android_intent_command_for_opener(
+                                                    &op,
+                                                    &fallback_link,
+                                                    fallback_sub.as_deref(),
+                                                    &fallback_headers,
+                                                );
+                                            fallback_cmd.stdin(std::process::Stdio::null());
+                                            fallback_cmd.stdout(std::process::Stdio::null());
+                                            fallback_cmd.stderr(std::process::Stdio::null());
+                                            crate::player::configure_detached_process(
+                                                &mut fallback_cmd,
+                                            );
+                                            if let Ok(mut retry_child) = fallback_cmd.spawn() {
+                                                if let Ok(retry_status) = retry_child.wait() {
+                                                    if retry_status.success() {
+                                                        log::info!(
+                                                            "fallback android opener {op:?} succeeded"
+                                                        );
+                                                        if let Some(path) = temporary_subtitle {
+                                                            let _ = std::fs::remove_file(path);
+                                                        }
+                                                        sender.send(Action::PlayerExited).ok();
+                                                        return;
                                                     }
-                                                    sender.send(Action::PlayerExited).ok();
-                                                    return;
                                                 }
                                             }
                                         }
                                     }
-                                }
 
-                                #[cfg(unix)]
-                                let signal = {
-                                    use std::os::unix::process::ExitStatusExt;
-                                    status.signal()
-                                };
-                                #[cfg(not(unix))]
-                                let signal = None;
-                                let clean_error =
-                                    clean_player_error(status.code(), signal, error_output.trim());
-                                sender
-                                    .send(Action::PlayerCrashed(status.code(), clean_error))
-                                    .ok();
-                            }
-                            Err(error) => {
-                                sender
-                                    .send(Action::PlayerCrashed(
-                                        None,
-                                        format!("Failed waiting for player process: {error}"),
-                                    ))
-                                    .ok();
+                                    #[cfg(unix)]
+                                    let signal = {
+                                        use std::os::unix::process::ExitStatusExt;
+                                        status.signal()
+                                    };
+                                    #[cfg(not(unix))]
+                                    let signal = None;
+                                    let clean_error = clean_player_error(
+                                        status.code(),
+                                        signal,
+                                        error_output.trim(),
+                                    );
+                                    sender
+                                        .send(Action::PlayerCrashed(status.code(), clean_error))
+                                        .ok();
+                                }
+                                Err(error) => {
+                                    sender
+                                        .send(Action::PlayerCrashed(
+                                            None,
+                                            format!("Failed waiting for player process: {error}"),
+                                        ))
+                                        .ok();
+                                }
                             }
                         }
+
                         if !is_android
                             && (matches!(kind, crate::tui::state::PlayerKind::Mpv)
                                 || start_time.elapsed() >= std::time::Duration::from_secs(3)
@@ -738,14 +844,24 @@ impl App {
         });
     }
 }
+fn should_retry_vlc_with_mpv(
+    kind: crate::tui::state::PlayerKind,
+    elapsed: std::time::Duration,
+) -> bool {
+    matches!(kind, crate::tui::state::PlayerKind::Vlc)
+        && elapsed < std::time::Duration::from_secs(3)
+}
+
 fn is_vlc_normal_exit(
     kind: crate::tui::state::PlayerKind,
     code: Option<i32>,
     stderr: &str,
+    elapsed: std::time::Duration,
 ) -> bool {
     matches!(kind, crate::tui::state::PlayerKind::Vlc)
-        && (code == Some(1) || code == Some(0))
+        && code == Some(1)
         && stderr.is_empty()
+        && elapsed >= std::time::Duration::from_secs(5)
 }
 
 fn is_user_quit(status: &std::process::ExitStatus) -> bool {
@@ -1194,7 +1310,8 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use super::clean_player_error;
+    use super::{clean_player_error, is_vlc_normal_exit, should_retry_vlc_with_mpv};
+    use std::time::Duration;
 
     #[test]
     fn failed_player_with_stderr_keeps_diagnostic() {
@@ -1232,17 +1349,57 @@ mod tests {
     }
 
     #[test]
-    fn vlc_exit_code_1_empty_stderr_is_normal_exit() {
+    fn vlc_quick_failure_retries_with_mpv() {
         use crate::tui::state::PlayerKind;
-        assert!(super::is_vlc_normal_exit(PlayerKind::Vlc, Some(1), ""));
-        assert!(super::is_vlc_normal_exit(PlayerKind::Vlc, Some(0), ""));
-        assert!(!super::is_vlc_normal_exit(
+
+        assert!(should_retry_vlc_with_mpv(
+            PlayerKind::Vlc,
+            Duration::from_secs(1)
+        ));
+        assert!(!should_retry_vlc_with_mpv(
+            PlayerKind::Vlc,
+            Duration::from_secs(3)
+        ));
+        assert!(!should_retry_vlc_with_mpv(
+            PlayerKind::Mpv,
+            Duration::from_secs(1)
+        ));
+    }
+
+    #[test]
+    fn vlc_exit_code_1_is_normal_only_after_a_reasonable_playback_time() {
+        use crate::tui::state::PlayerKind;
+
+        assert!(!is_vlc_normal_exit(
             PlayerKind::Vlc,
             Some(1),
-            "Error opening stream"
+            "",
+            Duration::from_secs(1)
         ));
-        assert!(!super::is_vlc_normal_exit(PlayerKind::Mpv, Some(1), ""));
-        assert!(!super::is_vlc_normal_exit(PlayerKind::Vlc, Some(2), ""));
+        assert!(is_vlc_normal_exit(
+            PlayerKind::Vlc,
+            Some(1),
+            "",
+            Duration::from_secs(5)
+        ));
+        assert!(!is_vlc_normal_exit(
+            PlayerKind::Vlc,
+            Some(1),
+            "Error opening stream",
+            Duration::from_secs(5)
+        ));
+        assert!(!is_vlc_normal_exit(
+            PlayerKind::Mpv,
+            Some(1),
+            "",
+            Duration::from_secs(5)
+        ));
+        assert!(!is_vlc_normal_exit(
+            PlayerKind::Vlc,
+            Some(2),
+            "",
+            Duration::from_secs(5)
+        ));
     }
 
     #[tokio::test]
