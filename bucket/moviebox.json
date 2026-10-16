@@ -1,5 +1,5 @@
 {
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "Terminal interface to find, download, and stream movies, TV shows, and live TV",
   "homepage": "https://github.com/Mrminecope/MovieBox",
   "license": "MIT|Apache-2.0",
@@ -8,12 +8,12 @@
   },
   "architecture": {
     "64bit": {
-      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.28/MovieBox_Windows_x64.zip",
-      "hash": "75e404579ce1552074079792daad154358b82dce9614ec4408d01cfd6683a842"
+      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.29/MovieBox_Windows_x64.zip",
+      "hash": "8c1c025a7ab932304ec3b4c3f8b5eb7036ab664d5726ee10c7031bfb5c49b9d2"
     },
     "arm64": {
-      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.28/MovieBox_Windows_arm64.zip",
-      "hash": "a4e1ce51837fb406248dd4f0f16163b1fe56d23b7e54d60b499c173677ea3cee"
+      "url": "https://github.com/Mrminecope/MovieBox/releases/download/v0.1.29/MovieBox_Windows_arm64.zip",
+      "hash": "26284594d6ab0a27a7517c60d76c3c0bd6ebe1c7ca7bd02e3f85a8b57e7516ec"
     }
   },
   "bin": "moviebox.exe",
