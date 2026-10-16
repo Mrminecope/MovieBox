@@ -561,13 +561,27 @@ pub fn moviebox_resource_item_to_release(item: &serde_json::Value) -> Release {
     }
 }
 
+fn is_dated_notice_path(lower_url: &str) -> bool {
+    let Some(after_other) = lower_url.split("/other/").nth(1) else {
+        return false;
+    };
+    let parts = after_other.split('/').collect::<Vec<_>>();
+    parts.len() >= 4
+        && parts[0].len() == 4
+        && parts[1].len() == 2
+        && parts[2].len() == 2
+        && parts[..3]
+            .iter()
+            .all(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
+}
+
 pub fn is_deprecation_notice_url(url: &str) -> bool {
     let lower = url.to_ascii_lowercase();
     lower.contains("1c7de0bd3393702d9191801f15f88f8d")
         || lower.contains("9a0461bc39da389663bf3dbb17091d3f")
         || lower.contains("b164fbfb4347792950bdfbfb563d39d9")
         || lower.contains("/notice.mp4")
-        || (lower.contains("macdn.aoneroom.com") && lower.contains("/other/"))
+        || is_dated_notice_path(&lower)
 }
 
 fn to_dash_mpd(url_str: &str) -> Option<String> {
@@ -810,6 +824,288 @@ pub fn moviebox_resource_json_to_releases(payload: &serde_json::Value) -> Vec<Re
         .map(moviebox_resource_item_to_release)
         .filter(|r| !r.mirrors.is_empty())
         .collect()
+}
+
+
+fn alternate_value_as_u64(value: &serde_json::Value) -> Option<u64> {
+    value
+        .as_u64()
+        .or_else(|| value.as_i64().and_then(|n| u64::try_from(n).ok()))
+        .or_else(|| value.as_str().and_then(|s| s.parse::<u64>().ok()))
+}
+
+fn alternate_value_as_usize(value: &serde_json::Value) -> Option<usize> {
+    alternate_value_as_u64(value).and_then(|n| usize::try_from(n).ok())
+}
+
+fn alternate_first_number(value: &serde_json::Value) -> Option<u32> {
+    if let Some(n) = value.as_u64() {
+        return u32::try_from(n).ok();
+    }
+    let text = value.as_str()?;
+    let digits = text
+        .chars()
+        .skip_while(|ch| !ch.is_ascii_digit())
+        .take_while(|ch| ch.is_ascii_digit())
+        .collect::<String>();
+    digits.parse::<u32>().ok()
+}
+
+fn alternate_string_id(value: &serde_json::Value) -> Option<String> {
+    value
+        .as_str()
+        .map(str::to_string)
+        .or_else(|| value.as_u64().map(|n| n.to_string()))
+        .or_else(|| value.as_i64().map(|n| n.to_string()))
+}
+
+fn alternate_episode_matches(
+    item: &serde_json::Value,
+    requested_season: usize,
+    requested_episode: usize,
+) -> bool {
+    let item_season = item
+        .get("se")
+        .or_else(|| item.get("season"))
+        .and_then(alternate_value_as_usize)
+        .filter(|n| *n > 0);
+    let item_episode = item
+        .get("ep")
+        .or_else(|| item.get("episode"))
+        .and_then(alternate_value_as_usize)
+        .filter(|n| *n > 0);
+
+    (requested_season == 0 || item_season.is_none_or(|n| n == requested_season))
+        && (requested_episode == 0 || item_episode.is_none_or(|n| n == requested_episode))
+}
+
+/// Convert a real playback resource supplied by the TV BFF or resource detectors.
+/// Reject dated /other/YYYY/MM/DD placeholder links before adding them to the UI.
+fn alternate_resource_to_release(
+    item: &serde_json::Value,
+    raw_url: Option<&str>,
+    title_prefix: &str,
+    requested_season: usize,
+    requested_episode: usize,
+    user_agent: &str,
+) -> Option<Release> {
+    let sign_cookie = item
+        .get("signCookie")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default();
+    let playable_url = resolve_dash_manifest_from_policy(sign_cookie).or_else(|| {
+        raw_url
+            .filter(|url| {
+                (url.starts_with("https://") || url.starts_with("http://"))
+                    && !is_deprecation_notice_url(url)
+            })
+            .map(str::to_string)
+    })?;
+
+    let resolution_value = item
+        .get("resolution")
+        .or_else(|| item.get("displayResolution"))
+        .or_else(|| item.get("title"));
+    let resolution = resolution_value
+        .and_then(alternate_first_number)
+        .filter(|n| *n > 0)
+        .unwrap_or(1080);
+    let quality = format!("{resolution}p");
+    let codec = item
+        .get("codecName")
+        .or_else(|| item.get("codec"))
+        .and_then(|v| v.as_str())
+        .map(str::to_string);
+    let link_type = item
+        .get("linkType")
+        .and_then(|v| v.as_str().map(str::to_string).or_else(|| v.as_i64().map(|n| n.to_string())));
+    let is_hls = link_type
+        .as_deref()
+        .is_some_and(|value| value == "1" || value.eq_ignore_ascii_case("hls"))
+        || playable_url
+            .to_ascii_lowercase()
+            .split('?')
+            .next()
+            .is_some_and(|url| url.ends_with(".m3u8"));
+    let format = if playable_url.to_ascii_lowercase().contains(".mpd") {
+        "DASH"
+    } else if is_hls {
+        "HLS"
+    } else {
+        item.get("format")
+            .or_else(|| item.get("formatType"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("MP4")
+    };
+    let codec_label = codec.as_deref().unwrap_or(format);
+    let filename = item
+        .get("fileName")
+        .or_else(|| item.get("filename"))
+        .or_else(|| item.get("title"))
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.trim().is_empty())
+        .map(str::to_string)
+        .unwrap_or_else(|| {
+            if requested_season > 0 && requested_episode > 0 {
+                format!("{title_prefix} S{requested_season:02}E{requested_episode:02} {quality} {codec_label}")
+            } else {
+                format!("{title_prefix} {quality} {codec_label}")
+            }
+        });
+
+    let mut headers = vec![
+        ("Referer".to_string(), super::STREAM_REFERER.to_string()),
+        ("User-Agent".to_string(), user_agent.to_string()),
+    ];
+    if !sign_cookie.trim().is_empty() {
+        let clean_cookie = sign_cookie
+            .trim_end_matches(';')
+            .split(';')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>()
+            .join("; ");
+        if !clean_cookie.is_empty() {
+            headers.push(("Cookie".to_string(), clean_cookie));
+        }
+    }
+
+    let size_bytes = item.get("size").and_then(alternate_value_as_u64);
+    let season = if requested_season > 0 {
+        Some(requested_season)
+    } else {
+        item.get("se")
+            .or_else(|| item.get("season"))
+            .and_then(alternate_value_as_usize)
+            .filter(|n| *n > 0)
+    };
+    let episode = if requested_episode > 0 {
+        Some(requested_episode)
+    } else {
+        item.get("ep")
+            .or_else(|| item.get("episode"))
+            .and_then(alternate_value_as_usize)
+            .filter(|n| *n > 0)
+    };
+    let resource_id = item
+        .get("resourceId")
+        .or_else(|| item.get("id"))
+        .and_then(alternate_string_id);
+
+    Some(Release {
+        provider: ProviderKind::MovieBox,
+        filename,
+        quality: Some(quality.clone()),
+        codec,
+        language: item
+            .get("lanName")
+            .or_else(|| item.get("language"))
+            .and_then(|v| v.as_str())
+            .map(str::to_string),
+        size_bytes,
+        season,
+        episode,
+        mirrors: vec![SourceMirror {
+            label: format!("{quality} {codec_label}"),
+            resolver_url: playable_url,
+            headers,
+            direct_file: true,
+        }],
+        resource_id,
+    })
+}
+
+/// Parse playable entries from the TV BFF. Its real URLs are exposed in resources[].
+pub fn moviebox_tv_play_info_json_to_releases(
+    payload: &serde_json::Value,
+    season: usize,
+    episode: usize,
+    user_agent: &str,
+) -> Vec<Release> {
+    let data = payload.get("data").unwrap_or(payload);
+    let title_prefix = data
+        .get("title")
+        .and_then(|v| v.as_str())
+        .map(crate::providers::moviebox::title::clean_moviebox_title)
+        .unwrap_or_else(|| "MovieBox Stream".to_string());
+    let Some(resources) = data
+        .get("resources")
+        .or_else(|| data.get("streams"))
+        .and_then(|v| v.as_array())
+    else {
+        return Vec::new();
+    };
+
+    resources
+        .iter()
+        .filter(|item| alternate_episode_matches(item, season, episode))
+        .filter_map(|item| {
+            let url = item
+                .get("url")
+                .or_else(|| item.get("resourceLink"))
+                .or_else(|| item.get("sourceUrl"))
+                .and_then(|v| v.as_str());
+            alternate_resource_to_release(
+                item,
+                url,
+                &title_prefix,
+                season,
+                episode,
+                user_agent,
+            )
+        })
+        .collect()
+}
+
+/// Final fallback for real links exposed via the subject get endpoint.
+pub fn moviebox_resource_detector_json_to_releases(
+    payload: &serde_json::Value,
+    season: usize,
+    episode: usize,
+    user_agent: &str,
+) -> Vec<Release> {
+    let data = payload.get("data").unwrap_or(payload);
+    let title_prefix = data
+        .get("title")
+        .or_else(|| data.get("subject").and_then(|v| v.get("title")))
+        .and_then(|v| v.as_str())
+        .map(crate::providers::moviebox::title::clean_moviebox_title)
+        .unwrap_or_else(|| "MovieBox Stream".to_string());
+    let detectors = data
+        .get("resourceDetectors")
+        .or_else(|| data.get("subject").and_then(|v| v.get("resourceDetectors")))
+        .and_then(|v| v.as_array());
+    let Some(detectors) = detectors else {
+        return Vec::new();
+    };
+
+    let mut releases = Vec::new();
+    for detector in detectors {
+        let Some(resolution_list) = detector.get("resolutionList").and_then(|v| v.as_array()) else {
+            continue;
+        };
+        for item in resolution_list {
+            if !alternate_episode_matches(item, season, episode) {
+                continue;
+            }
+            let url = item
+                .get("resourceLink")
+                .or_else(|| item.get("sourceUrl"))
+                .or_else(|| item.get("url"))
+                .and_then(|v| v.as_str());
+            if let Some(release) = alternate_resource_to_release(
+                item,
+                url,
+                &title_prefix,
+                season,
+                episode,
+                user_agent,
+            ) {
+                releases.push(release);
+            }
+        }
+    }
+    releases
 }
 
 #[cfg(test)]
