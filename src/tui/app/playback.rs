@@ -576,6 +576,103 @@ impl App {
                         let error_output = std::fs::read_to_string(&log_path).unwrap_or_default();
                         let _ = std::fs::remove_file(&log_path);
 
+                        let quick_vlc_failure = matches!(kind, crate::tui::state::PlayerKind::Vlc)
+                            && start_time.elapsed() < std::time::Duration::from_secs(5)
+                            && result.as_ref().is_ok_and(|status| !status.success());
+                        let mut retried_with_mpv = false;
+
+                        if quick_vlc_failure
+                            && crate::player::detect().contains(&crate::player::PlayerKind::Mpv)
+                        {
+                            let _ = sender.send(Action::SetStatus(
+                                "VLC exited immediately; retrying playback with MPV.".to_string(),
+                            ));
+                            log::warn!(
+                                "VLC exited after {}ms; retrying the same stream with MPV",
+                                start_time.elapsed().as_millis()
+                            );
+
+                            let fallback_log_path = log_path.with_extension("mpv-fallback.log");
+                            let fallback_tracker = tracker_opts
+                                .as_ref()
+                                .map(|(provider, subject_id, season, episode)| {
+                                    (provider.as_str(), subject_id.as_str(), *season, *episode)
+                                });
+                            let mut fallback_cmd = crate::tui::player::command(
+                                crate::tui::state::PlayerKind::Mpv,
+                                &fallback_link,
+                                fallback_sub.as_deref(),
+                                &fallback_headers,
+                                window,
+                                resume_seconds,
+                                fallback_tracker,
+                                max_height,
+                            );
+                            fallback_cmd.stdin(std::process::Stdio::null());
+                            fallback_cmd.stdout(std::process::Stdio::null());
+                            if let Ok(file) = std::fs::File::create(&fallback_log_path) {
+                                fallback_cmd.stderr(std::process::Stdio::from(file));
+                            } else {
+                                fallback_cmd.stderr(std::process::Stdio::null());
+                            }
+                            crate::player::configure_detached_process(&mut fallback_cmd);
+
+                            match fallback_cmd.spawn() {
+                                Ok(mut fallback_child) => {
+                                    retried_with_mpv = true;
+                                    let fallback_result = fallback_child.wait();
+                                    let fallback_error =
+                                        std::fs::read_to_string(&fallback_log_path).unwrap_or_default();
+                                    let _ = std::fs::remove_file(&fallback_log_path);
+
+                                    match fallback_result {
+                                        Ok(fallback_status) if fallback_status.success() => {
+                                            log::info!(
+                                                "MPV fallback finished (code: {:?}, total duration: {}s)",
+                                                fallback_status.code(),
+                                                start_time.elapsed().as_secs()
+                                            );
+                                            if tracker_opts.is_some() {
+                                                sender.send(Action::ReconcileHistory).ok();
+                                            }
+                                        }
+                                        Ok(fallback_status) => {
+                                            #[cfg(unix)]
+                                            let fallback_signal = {
+                                                use std::os::unix::process::ExitStatusExt;
+                                                fallback_status.signal()
+                                            };
+                                            #[cfg(not(unix))]
+                                            let fallback_signal = None;
+                                            let error = clean_player_error(
+                                                fallback_status.code(),
+                                                fallback_signal,
+                                                fallback_error.trim(),
+                                            );
+                                            sender
+                                                .send(Action::PlayerCrashed(
+                                                    fallback_status.code(),
+                                                    format!("VLC failed to start playback; MPV fallback also failed: {error}"),
+                                                ))
+                                                .ok();
+                                        }
+                                        Err(error) => {
+                                            sender
+                                                .send(Action::PlayerCrashed(
+                                                    None,
+                                                    format!("VLC failed to start playback; could not wait for MPV fallback: {error}"),
+                                                ))
+                                                .ok();
+                                        }
+                                    }
+                                }
+                                Err(error) => {
+                                    log::warn!("failed to spawn MPV fallback after VLC exit: {error}");
+                                }
+                            }
+                        }
+
+                        if !retried_with_mpv {
                         match &result {
                             Ok(status)
                                 if status.success()
@@ -583,6 +680,7 @@ impl App {
                                         kind,
                                         status.code(),
                                         error_output.trim(),
+                                        start_time.elapsed(),
                                     )
                                     || is_user_quit(status) =>
                             {
@@ -695,6 +793,8 @@ impl App {
                                     .ok();
                             }
                         }
+                        }
+
                         if !is_android
                             && (matches!(kind, crate::tui::state::PlayerKind::Mpv)
                                 || start_time.elapsed() >= std::time::Duration::from_secs(3)
