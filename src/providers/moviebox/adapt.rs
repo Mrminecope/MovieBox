@@ -1051,7 +1051,7 @@ pub fn moviebox_tv_play_info_json_to_releases(
         .filter(|item| alternate_episode_matches(item, season, episode))
         .filter_map(|item| {
             let url = alternate_item_url(item, &["url", "resourceLink", "sourceUrl"]);
-            alternate_resource_to_release(item, url, &title_prefix, season, episode, user_agent)
+            alternate_resource_to_release(item, url, title_prefix, season, episode, user_agent)
         })
         .collect()
 }
@@ -1090,7 +1090,7 @@ pub fn moviebox_resource_detector_json_to_releases(
             }
             let url = alternate_item_url(item, &["resourceLink", "sourceUrl", "url"]);
             if let Some(release) =
-                alternate_resource_to_release(item, url, &title_prefix, season, episode, user_agent)
+                alternate_resource_to_release(item, url, title_prefix, season, episode, user_agent)
             {
                 releases.push(release);
             }
