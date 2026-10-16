@@ -1155,8 +1155,7 @@ mod tests {
             Some("https://cdn.example.com/real.mp4?token=abc")
         );
         assert!(
-            releases[0]
-                .mirrors[0]
+            releases[0].mirrors[0]
                 .headers
                 .iter()
                 .any(|(name, value)| name == "User-Agent" && value == "MovieBoxTV/Test")
@@ -1195,12 +1194,7 @@ mod tests {
             }]
         });
 
-        let releases = moviebox_resource_detector_json_to_releases(
-            &payload,
-            1,
-            2,
-            "MovieBox/Test",
-        );
+        let releases = moviebox_resource_detector_json_to_releases(&payload, 1, 2, "MovieBox/Test");
         assert_eq!(releases.len(), 1);
         assert_eq!(releases[0].quality.as_deref(), Some("720p"));
         assert_eq!(
