@@ -65,6 +65,9 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
         // MovieBox rejects resource requests with perPage > 10 using an
         // application-level error response. Keep the fallback request within
         // that limit so it can still return streams when play-info is empty.
+        // MovieBox's play-info v2 endpoint provides signed playback URLs. The
+        // resource endpoint is a fallback for subjects whose play-info response
+        // has no playable stream, and must be queried with perPage <= 10.
         let (play_info_res, resources_res) = tokio::join!(
             self.get_play_info(id, season, episode),
             self.get_resources(
