@@ -576,9 +576,9 @@ impl App {
                         let error_output = std::fs::read_to_string(&log_path).unwrap_or_default();
                         let _ = std::fs::remove_file(&log_path);
 
-                        let quick_vlc_failure = matches!(kind, crate::tui::state::PlayerKind::Vlc)
-                            && start_time.elapsed() < std::time::Duration::from_secs(5)
-                            && result.as_ref().is_ok_and(|status| !status.success());
+                        let quick_vlc_failure = result.as_ref().is_ok_and(|status| {
+                            should_retry_vlc_with_mpv(kind, status.success(), start_time.elapsed())
+                        });
                         let mut retried_with_mpv = false;
 
                         if quick_vlc_failure
@@ -838,14 +838,26 @@ impl App {
         });
     }
 }
+fn should_retry_vlc_with_mpv(
+    kind: crate::tui::state::PlayerKind,
+    status_success: bool,
+    elapsed: std::time::Duration,
+) -> bool {
+    matches!(kind, crate::tui::state::PlayerKind::Vlc)
+        && !status_success
+        && elapsed < std::time::Duration::from_secs(5)
+}
+
 fn is_vlc_normal_exit(
     kind: crate::tui::state::PlayerKind,
     code: Option<i32>,
     stderr: &str,
+    elapsed: std::time::Duration,
 ) -> bool {
     matches!(kind, crate::tui::state::PlayerKind::Vlc)
-        && (code == Some(1) || code == Some(0))
+        && code == Some(1)
         && stderr.is_empty()
+        && elapsed >= std::time::Duration::from_secs(5)
 }
 
 fn is_user_quit(status: &std::process::ExitStatus) -> bool {
@@ -1294,7 +1306,8 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use super::clean_player_error;
+    use super::{clean_player_error, is_vlc_normal_exit, should_retry_vlc_with_mpv};
+    use std::time::Duration;
 
     #[test]
     fn failed_player_with_stderr_keeps_diagnostic() {
@@ -1332,17 +1345,65 @@ mod tests {
     }
 
     #[test]
-    fn vlc_exit_code_1_empty_stderr_is_normal_exit() {
+    fn vlc_quick_failure_retries_with_mpv() {
         use crate::tui::state::PlayerKind;
-        assert!(super::is_vlc_normal_exit(PlayerKind::Vlc, Some(1), ""));
-        assert!(super::is_vlc_normal_exit(PlayerKind::Vlc, Some(0), ""));
-        assert!(!super::is_vlc_normal_exit(
+
+        assert!(should_retry_vlc_with_mpv(
+            PlayerKind::Vlc,
+            false,
+            Duration::from_secs(1)
+        ));
+        assert!(!should_retry_vlc_with_mpv(
+            PlayerKind::Vlc,
+            true,
+            Duration::from_secs(1)
+        ));
+        assert!(!should_retry_vlc_with_mpv(
+            PlayerKind::Vlc,
+            false,
+            Duration::from_secs(5)
+        ));
+        assert!(!should_retry_vlc_with_mpv(
+            PlayerKind::Mpv,
+            false,
+            Duration::from_secs(1)
+        ));
+    }
+
+    #[test]
+    fn vlc_exit_code_1_is_normal_only_after_a_reasonable_playback_time() {
+        use crate::tui::state::PlayerKind;
+
+        assert!(!is_vlc_normal_exit(
             PlayerKind::Vlc,
             Some(1),
-            "Error opening stream"
+            "",
+            Duration::from_secs(1)
         ));
-        assert!(!super::is_vlc_normal_exit(PlayerKind::Mpv, Some(1), ""));
-        assert!(!super::is_vlc_normal_exit(PlayerKind::Vlc, Some(2), ""));
+        assert!(is_vlc_normal_exit(
+            PlayerKind::Vlc,
+            Some(1),
+            "",
+            Duration::from_secs(5)
+        ));
+        assert!(!is_vlc_normal_exit(
+            PlayerKind::Vlc,
+            Some(1),
+            "Error opening stream",
+            Duration::from_secs(5)
+        ));
+        assert!(!is_vlc_normal_exit(
+            PlayerKind::Mpv,
+            Some(1),
+            "",
+            Duration::from_secs(5)
+        ));
+        assert!(!is_vlc_normal_exit(
+            PlayerKind::Vlc,
+            Some(2),
+            "",
+            Duration::from_secs(5)
+        ));
     }
 
     #[tokio::test]
