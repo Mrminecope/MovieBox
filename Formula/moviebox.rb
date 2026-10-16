@@ -1,8 +1,8 @@
 class Moviebox < Formula
-  VERSION = "0.1.29"
-  MACOS_SHA256 = "294fb4163a169e0986ead099766517793183caaedf74a69fee130320e37ea542"
-  LINUX_X64_SHA256 = "b5acc47489b9bbb6e8dbb3da4a7517faaf889c2dc70836023b36fae9de428047"
-  LINUX_ARM64_SHA256 = "7140c77fbf57df1e3245f19f1c28f38b6a7f14e69c477142303058ed3afeaf0e"
+  VERSION = "0.1.30"
+  MACOS_SHA256 = "917928a76bddc422fedfaca7b7ec30822f8ad821d059dba8657f013244261d26"
+  LINUX_X64_SHA256 = "6a216cc65a6d4c9c4432e4b87ac18faee72d2b60239344baa78083e5f4fccf42"
+  LINUX_ARM64_SHA256 = "091e17311462e62ca54c20459f2c810b74856bd6c54af4b73357aa4185a0b5dc"
 
   desc "Stream movies, shows, anime, and live TV from your terminal"
   homepage "https://github.com/Mrminecope/MovieBox"
