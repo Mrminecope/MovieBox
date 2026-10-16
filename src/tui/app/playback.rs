@@ -1352,9 +1352,18 @@ mod tests {
     fn vlc_quick_failure_retries_with_mpv() {
         use crate::tui::state::PlayerKind;
 
-        assert!(should_retry_vlc_with_mpv(PlayerKind::Vlc, Duration::from_secs(1)));
-        assert!(!should_retry_vlc_with_mpv(PlayerKind::Vlc, Duration::from_secs(3)));
-        assert!(!should_retry_vlc_with_mpv(PlayerKind::Mpv, Duration::from_secs(1)));
+        assert!(should_retry_vlc_with_mpv(
+            PlayerKind::Vlc,
+            Duration::from_secs(1)
+        ));
+        assert!(!should_retry_vlc_with_mpv(
+            PlayerKind::Vlc,
+            Duration::from_secs(3)
+        ));
+        assert!(!should_retry_vlc_with_mpv(
+            PlayerKind::Mpv,
+            Duration::from_secs(1)
+        ));
     }
 
     #[test]
