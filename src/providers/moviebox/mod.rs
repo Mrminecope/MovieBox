@@ -376,7 +376,7 @@ mod tests {
         let path = resource_page_path("12345", 0, 0, 0, 1);
         assert_eq!(
             path,
-            "/wefeed-mobile-bff/subject-api/resource?subjectId=12345&page=1&perPage=20"
+            "/wefeed-mobile-bff/subject-api/resource?subjectId=12345&page=1&perPage=10"
         );
     }
 
@@ -385,7 +385,7 @@ mod tests {
         let path = resource_page_path("67890", 2, 5, 0, 1);
         assert_eq!(
             path,
-            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=2&ep=5&page=1&perPage=20"
+            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=2&ep=5&page=1&perPage=10"
         );
     }
 
@@ -394,7 +394,7 @@ mod tests {
         let path = resource_page_path("67890", 1, 10, 1080, 2);
         assert_eq!(
             path,
-            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=1&ep=10&page=2&perPage=20&resolution=1080"
+            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=1&ep=10&page=2&perPage=10&resolution=1080"
         );
     }
 }
