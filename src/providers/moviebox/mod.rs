@@ -62,6 +62,9 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
         season: usize,
         episode: usize,
     ) -> Result<Vec<crate::providers::models::Release>, ProviderError> {
+        // MovieBox rejects resource requests with perPage > 10 using an
+        // application-level error response. Keep the fallback request within
+        // that limit so it can still return streams when play-info is empty.
         let (play_info_res, resources_res) = tokio::join!(
             self.get_play_info(id, season, episode),
             self.get_resources(
@@ -69,12 +72,12 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
                 season,
                 episode,
                 if episode > 0 {
-                    (episode - 1) / 20 + 1
+                    (episode - 1) / 10 + 1
                 } else {
                     1
                 },
                 None,
-                20,
+                10,
             )
         );
 
