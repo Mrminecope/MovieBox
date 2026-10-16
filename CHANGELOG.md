@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.28] - 2026-10-16
+
+### Fixed
+- Fixed MovieBox stream fallback requests to use the upstream-supported resource page size of 10.
+- Corrected resource pagination URL generation for movies, TV episodes, and resolution-filtered requests.
+- Preserved stream endpoint failure details in logs and user-facing errors instead of silently discarding them.
+
+### Security
+- Updated locked `quinn-proto` and `rustls` dependencies to patched versions to resolve dependency audit findings.
+
 ## [0.1.27] - 2026-10-01
 
 ### Changed
