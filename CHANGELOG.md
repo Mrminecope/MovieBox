@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.30] - 2026-10-16
+
+### Fixed
+- Recover from VLC sessions that close almost immediately by retrying the same stream through MPV when MPV is installed.
+- Preserve the resolved stream URL, required headers, subtitles, resume position, selected quality, playback tracking, and local relay while retrying.
+- Stop treating an early VLC exit with status code 1 and empty stderr as a normal close; surface the failure instead when retry is unavailable or also fails.
+- Add regression tests for VLC quick-exit retry and clean-exit timing.
+
 ## [0.1.29] - 2026-10-16
 
 ### Fixed
