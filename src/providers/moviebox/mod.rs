@@ -289,7 +289,7 @@ impl MovieBoxClient {
         subject_id: &str,
     ) -> Result<Vec<u32>, ScraperError> {
         let path = format!(
-            "/wefeed-mobile-bff/subject-api/resource?subjectId={}&page=1&perPage=20",
+            "/wefeed-mobile-bff/subject-api/resource?subjectId={}&page=1&perPage=10",
             subject_id
         );
         let res = self.get(&path).await?;
@@ -354,12 +354,12 @@ pub fn resource_page_path(
 
     if season == 0 && episode == 0 {
         format!(
-            "/wefeed-mobile-bff/subject-api/resource?subjectId={}&page={}&perPage=20{}",
+            "/wefeed-mobile-bff/subject-api/resource?subjectId={}&page={}&perPage=10{}",
             subject_id, page, res_param
         )
     } else {
         format!(
-            "/wefeed-mobile-bff/subject-api/resource?subjectId={}&se={}&ep={}&page={}&perPage=20{}",
+            "/wefeed-mobile-bff/subject-api/resource?subjectId={}&se={}&ep={}&page={}&perPage=10{}",
             subject_id, season, episode, page, res_param
         )
     }
