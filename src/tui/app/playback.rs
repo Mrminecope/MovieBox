@@ -620,8 +620,9 @@ impl App {
                                 Ok(mut fallback_child) => {
                                     retried_with_mpv = true;
                                     let fallback_result = fallback_child.wait();
-                                    let fallback_error = std::fs::read_to_string(&fallback_log_path)
-                                        .unwrap_or_default();
+                                    let fallback_error =
+                                        std::fs::read_to_string(&fallback_log_path)
+                                            .unwrap_or_default();
                                     let _ = std::fs::remove_file(&fallback_log_path);
 
                                     match fallback_result {
@@ -674,7 +675,7 @@ impl App {
                         }
 
                         if !retried_with_mpv {
-                        match &result {
+                            match &result {
                                 Ok(status)
                                     if status.success()
                                         || is_vlc_normal_exit(
@@ -692,7 +693,7 @@ impl App {
                                     );
                                     let has_tracker = tracker_opts.is_some()
                                         && matches!(kind, crate::tui::state::PlayerKind::Mpv);
-    
+
                                     if has_tracker {
                                         sender.send(Action::ReconcileHistory).ok();
                                     } else if let Some(item) = history_item {
@@ -723,9 +724,10 @@ impl App {
                                 Ok(status) => {
                                     let is_termux_socket_err = is_android
                                         && (error_output.contains("am.sock")
-                                            || error_output.contains("Could not connect to socket")
+                                            || error_output
+                                                .contains("Could not connect to socket")
                                             || error_output.contains("termux-am"));
-    
+
                                     if is_termux_socket_err {
                                         let secondary =
                                             crate::player::android_openers()
@@ -771,7 +773,7 @@ impl App {
                                             }
                                         }
                                     }
-    
+
                                     #[cfg(unix)]
                                     let signal = {
                                         use std::os::unix::process::ExitStatusExt;
@@ -779,8 +781,11 @@ impl App {
                                     };
                                     #[cfg(not(unix))]
                                     let signal = None;
-                                    let clean_error =
-                                        clean_player_error(status.code(), signal, error_output.trim());
+                                    let clean_error = clean_player_error(
+                                        status.code(),
+                                        signal,
+                                        error_output.trim(),
+                                    );
                                     sender
                                         .send(Action::PlayerCrashed(status.code(), clean_error))
                                         .ok();
@@ -794,7 +799,7 @@ impl App {
                                         .ok();
                                 }
                             }
-                            }
+                        }
 
                         if !is_android
                             && (matches!(kind, crate::tui::state::PlayerKind::Mpv)
@@ -1347,18 +1352,9 @@ mod tests {
     fn vlc_quick_failure_retries_with_mpv() {
         use crate::tui::state::PlayerKind;
 
-        assert!(should_retry_vlc_with_mpv(
-            PlayerKind::Vlc,
-            Duration::from_secs(1)
-        ));
-        assert!(!should_retry_vlc_with_mpv(
-            PlayerKind::Vlc,
-            Duration::from_secs(3)
-        ));
-        assert!(!should_retry_vlc_with_mpv(
-            PlayerKind::Mpv,
-            Duration::from_secs(1)
-        ));
+        assert!(should_retry_vlc_with_mpv(PlayerKind::Vlc, Duration::from_secs(1)));
+        assert!(!should_retry_vlc_with_mpv(PlayerKind::Vlc, Duration::from_secs(3)));
+        assert!(!should_retry_vlc_with_mpv(PlayerKind::Mpv, Duration::from_secs(1)));
     }
 
     #[test]
