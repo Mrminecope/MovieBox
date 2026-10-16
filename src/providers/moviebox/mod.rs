@@ -62,6 +62,9 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
         season: usize,
         episode: usize,
     ) -> Result<Vec<crate::providers::models::Release>, ProviderError> {
+        // MovieBox rejects resource requests with perPage > 10 using an
+        // application-level error response. Keep the fallback request within
+        // that limit so it can still return streams when play-info is empty.
         let (play_info_res, resources_res) = tokio::join!(
             self.get_play_info(id, season, episode),
             self.get_resources(
@@ -69,57 +72,75 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
                 season,
                 episode,
                 if episode > 0 {
-                    (episode - 1) / 20 + 1
+                    (episode - 1) / 10 + 1
                 } else {
                     1
                 },
                 None,
-                20,
+                10,
             )
         );
 
         let mut releases = Vec::new();
         let mut seen_urls = std::collections::HashSet::new();
+        let mut endpoint_errors = Vec::new();
 
-        if let Ok(json) = play_info_res {
-            for rel in adapt::moviebox_play_info_json_to_releases(
-                &json,
-                season,
-                episode,
-                self.user_agent(),
-            ) {
-                if let Some(url) = rel.direct_url() {
-                    let base = url.split('?').next().unwrap_or(url).to_string();
-                    if !base.is_empty() {
-                        seen_urls.insert(base);
+        match play_info_res {
+            Ok(json) => {
+                for rel in adapt::moviebox_play_info_json_to_releases(
+                    &json,
+                    season,
+                    episode,
+                    self.user_agent(),
+                ) {
+                    if let Some(url) = rel.direct_url() {
+                        let base = url.split('?').next().unwrap_or(url).to_string();
+                        if !base.is_empty() {
+                            seen_urls.insert(base);
+                        }
                     }
-                }
-                releases.push(rel);
-            }
-        }
-
-        if let Ok(res_json) = resources_res {
-            for rel in adapt::moviebox_resource_json_to_releases(&res_json) {
-                if let Some(url) = rel.direct_url() {
-                    let base = url.split('?').next().unwrap_or(url).to_string();
-                    if !base.is_empty() && seen_urls.contains(&base) {
-                        continue;
-                    }
-                    seen_urls.insert(base);
-                }
-                if (season == 0 && episode == 0)
-                    || (rel.season == Some(season) && rel.episode == Some(episode))
-                    || (rel.season.is_none() && rel.episode.is_none())
-                {
                     releases.push(rel);
                 }
             }
+            Err(error) => endpoint_errors.push(format!("play-info: {error}")),
+        }
+
+        match resources_res {
+            Ok(res_json) => {
+                for rel in adapt::moviebox_resource_json_to_releases(&res_json) {
+                    if let Some(url) = rel.direct_url() {
+                        let base = url.split('?').next().unwrap_or(url).to_string();
+                        if !base.is_empty() && seen_urls.contains(&base) {
+                            continue;
+                        }
+                        seen_urls.insert(base);
+                    }
+                    if (season == 0 && episode == 0)
+                        || (rel.season == Some(season) && rel.episode == Some(episode))
+                        || (rel.season.is_none() && rel.episode.is_none())
+                    {
+                        releases.push(rel);
+                    }
+                }
+            }
+            Err(error) => endpoint_errors.push(format!("resource: {error}")),
         }
 
         if releases.is_empty() {
-            return Err(ProviderError::Unavailable(
-                "No stream sources available".to_string(),
-            ));
+            if !endpoint_errors.is_empty() {
+                log::warn!(
+                    "MovieBox stream lookup failed for subject {id} (season {season}, episode {episode}): {}",
+                    endpoint_errors.join("; ")
+                );
+            }
+            return Err(ProviderError::Unavailable(if endpoint_errors.is_empty() {
+                "No stream sources available".to_string()
+            } else {
+                format!(
+                    "No stream sources available ({})",
+                    endpoint_errors.join("; ")
+                )
+            }));
         }
 
         releases.sort_by(|left, right| {
@@ -353,7 +374,7 @@ mod tests {
         let path = resource_page_path("12345", 0, 0, 0, 1);
         assert_eq!(
             path,
-            "/wefeed-mobile-bff/subject-api/resource?subjectId=12345&page=1&perPage=20"
+            "/wefeed-mobile-bff/subject-api/resource?subjectId=12345&page=1&perPage=10"
         );
     }
 
@@ -362,7 +383,7 @@ mod tests {
         let path = resource_page_path("67890", 2, 5, 0, 1);
         assert_eq!(
             path,
-            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=2&ep=5&page=1&perPage=20"
+            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=2&ep=5&page=1&perPage=10"
         );
     }
 
@@ -371,7 +392,7 @@ mod tests {
         let path = resource_page_path("67890", 1, 10, 1080, 2);
         assert_eq!(
             path,
-            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=1&ep=10&page=2&perPage=20&resolution=1080"
+            "/wefeed-mobile-bff/subject-api/resource?subjectId=67890&se=1&ep=10&page=2&perPage=10&resolution=1080"
         );
     }
 }
