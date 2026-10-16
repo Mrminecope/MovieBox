@@ -83,45 +83,62 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
 
         let mut releases = Vec::new();
         let mut seen_urls = std::collections::HashSet::new();
+        let mut endpoint_errors = Vec::new();
 
-        if let Ok(json) = play_info_res {
-            for rel in adapt::moviebox_play_info_json_to_releases(
-                &json,
-                season,
-                episode,
-                self.user_agent(),
-            ) {
-                if let Some(url) = rel.direct_url() {
-                    let base = url.split('?').next().unwrap_or(url).to_string();
-                    if !base.is_empty() {
-                        seen_urls.insert(base);
+        match play_info_res {
+            Ok(json) => {
+                for rel in adapt::moviebox_play_info_json_to_releases(
+                    &json,
+                    season,
+                    episode,
+                    self.user_agent(),
+                ) {
+                    if let Some(url) = rel.direct_url() {
+                        let base = url.split('?').next().unwrap_or(url).to_string();
+                        if !base.is_empty() {
+                            seen_urls.insert(base);
+                        }
                     }
-                }
-                releases.push(rel);
-            }
-        }
-
-        if let Ok(res_json) = resources_res {
-            for rel in adapt::moviebox_resource_json_to_releases(&res_json) {
-                if let Some(url) = rel.direct_url() {
-                    let base = url.split('?').next().unwrap_or(url).to_string();
-                    if !base.is_empty() && seen_urls.contains(&base) {
-                        continue;
-                    }
-                    seen_urls.insert(base);
-                }
-                if (season == 0 && episode == 0)
-                    || (rel.season == Some(season) && rel.episode == Some(episode))
-                    || (rel.season.is_none() && rel.episode.is_none())
-                {
                     releases.push(rel);
                 }
             }
+            Err(error) => endpoint_errors.push(format!("play-info: {error}")),
+        }
+
+        match resources_res {
+            Ok(res_json) => {
+                for rel in adapt::moviebox_resource_json_to_releases(&res_json) {
+                    if let Some(url) = rel.direct_url() {
+                        let base = url.split('?').next().unwrap_or(url).to_string();
+                        if !base.is_empty() && seen_urls.contains(&base) {
+                            continue;
+                        }
+                        seen_urls.insert(base);
+                    }
+                    if (season == 0 && episode == 0)
+                        || (rel.season == Some(season) && rel.episode == Some(episode))
+                        || (rel.season.is_none() && rel.episode.is_none())
+                    {
+                        releases.push(rel);
+                    }
+                }
+            }
+            Err(error) => endpoint_errors.push(format!("resource: {error}")),
         }
 
         if releases.is_empty() {
+            if !endpoint_errors.is_empty() {
+                log::warn!(
+                    "MovieBox stream lookup failed for subject {id} (season {season}, episode {episode}): {}",
+                    endpoint_errors.join("; ")
+                );
+            }
             return Err(ProviderError::Unavailable(
-                "No stream sources available".to_string(),
+                if endpoint_errors.is_empty() {
+                    "No stream sources available".to_string()
+                } else {
+                    format!("No stream sources available ({})", endpoint_errors.join("; "))
+                },
             ));
         }
 
