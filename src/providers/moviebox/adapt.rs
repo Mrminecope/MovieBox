@@ -826,7 +826,6 @@ pub fn moviebox_resource_json_to_releases(payload: &serde_json::Value) -> Vec<Re
         .collect()
 }
 
-
 fn alternate_value_as_u64(value: &serde_json::Value) -> Option<u64> {
     value
         .as_u64()
@@ -879,10 +878,7 @@ fn alternate_episode_matches(
         && (requested_episode == 0 || item_episode.is_none_or(|n| n == requested_episode))
 }
 
-fn alternate_item_url<'a>(
-    item: &'a serde_json::Value,
-    keys: &[&str],
-) -> Option<&'a str> {
+fn alternate_item_url<'a>(item: &'a serde_json::Value, keys: &[&str]) -> Option<&'a str> {
     keys.iter()
         .filter_map(|key| item.get(*key).and_then(|v| v.as_str()))
         .find(|url| {
@@ -928,9 +924,11 @@ fn alternate_resource_to_release(
         .or_else(|| item.get("codec"))
         .and_then(|v| v.as_str())
         .map(str::to_string);
-    let link_type = item
-        .get("linkType")
-        .and_then(|v| v.as_str().map(str::to_string).or_else(|| v.as_i64().map(|n| n.to_string())));
+    let link_type = item.get("linkType").and_then(|v| {
+        v.as_str()
+            .map(str::to_string)
+            .or_else(|| v.as_i64().map(|n| n.to_string()))
+    });
     let is_hls = link_type
         .as_deref()
         .is_some_and(|value| value == "1" || value.eq_ignore_ascii_case("hls"))
@@ -949,7 +947,7 @@ fn alternate_resource_to_release(
             .and_then(|v| v.as_str())
             .unwrap_or("MP4")
     };
-    let codec_label = codec.as_deref().unwrap_or(format);
+    let codec_label = codec.as_deref().unwrap_or(format).to_string();
     let filename = item
         .get("fileName")
         .or_else(|| item.get("filename"))
@@ -1039,7 +1037,7 @@ pub fn moviebox_tv_play_info_json_to_releases(
         .get("title")
         .and_then(|v| v.as_str())
         .map(crate::providers::moviebox::title::clean_moviebox_title)
-        .unwrap_or_else(|| "MovieBox Stream".to_string());
+        .unwrap_or("MovieBox Stream");
     let Some(resources) = data
         .get("resources")
         .or_else(|| data.get("streams"))
@@ -1053,14 +1051,7 @@ pub fn moviebox_tv_play_info_json_to_releases(
         .filter(|item| alternate_episode_matches(item, season, episode))
         .filter_map(|item| {
             let url = alternate_item_url(item, &["url", "resourceLink", "sourceUrl"]);
-            alternate_resource_to_release(
-                item,
-                url,
-                &title_prefix,
-                season,
-                episode,
-                user_agent,
-            )
+            alternate_resource_to_release(item, url, &title_prefix, season, episode, user_agent)
         })
         .collect()
 }
@@ -1078,7 +1069,7 @@ pub fn moviebox_resource_detector_json_to_releases(
         .or_else(|| data.get("subject").and_then(|v| v.get("title")))
         .and_then(|v| v.as_str())
         .map(crate::providers::moviebox::title::clean_moviebox_title)
-        .unwrap_or_else(|| "MovieBox Stream".to_string());
+        .unwrap_or("MovieBox Stream");
     let detectors = data
         .get("resourceDetectors")
         .or_else(|| data.get("subject").and_then(|v| v.get("resourceDetectors")))
@@ -1089,7 +1080,8 @@ pub fn moviebox_resource_detector_json_to_releases(
 
     let mut releases = Vec::new();
     for detector in detectors {
-        let Some(resolution_list) = detector.get("resolutionList").and_then(|v| v.as_array()) else {
+        let Some(resolution_list) = detector.get("resolutionList").and_then(|v| v.as_array())
+        else {
             continue;
         };
         for item in resolution_list {
@@ -1097,14 +1089,9 @@ pub fn moviebox_resource_detector_json_to_releases(
                 continue;
             }
             let url = alternate_item_url(item, &["resourceLink", "sourceUrl", "url"]);
-            if let Some(release) = alternate_resource_to_release(
-                item,
-                url,
-                &title_prefix,
-                season,
-                episode,
-                user_agent,
-            ) {
+            if let Some(release) =
+                alternate_resource_to_release(item, url, &title_prefix, season, episode, user_agent)
+            {
                 releases.push(release);
             }
         }
@@ -1159,8 +1146,7 @@ mod tests {
             ]
         });
 
-        let releases =
-            moviebox_tv_play_info_json_to_releases(&payload, 1, 2, "MovieBoxTV/Test");
+        let releases = moviebox_tv_play_info_json_to_releases(&payload, 1, 2, "MovieBoxTV/Test");
         assert_eq!(releases.len(), 1);
         assert_eq!(releases[0].quality.as_deref(), Some("1080p"));
         assert_eq!(releases[0].resource_id.as_deref(), Some("real-1080"));
@@ -1168,10 +1154,13 @@ mod tests {
             releases[0].direct_url(),
             Some("https://cdn.example.com/real.mp4?token=abc")
         );
-        assert!(releases[0].mirrors[0]
-            .headers
-            .iter()
-            .any(|(name, value)| name == "User-Agent" && value == "MovieBoxTV/Test"));
+        assert!(
+            releases[0]
+                .mirrors[0]
+                .headers
+                .iter()
+                .any(|(name, value)| name == "User-Agent" && value == "MovieBoxTV/Test")
+        );
     }
 
     #[test]
@@ -1214,7 +1203,10 @@ mod tests {
         );
         assert_eq!(releases.len(), 1);
         assert_eq!(releases[0].quality.as_deref(), Some("720p"));
-        assert_eq!(releases[0].direct_url(), Some("https://cdn.example.com/episode.m3u8?token=def"));
+        assert_eq!(
+            releases[0].direct_url(),
+            Some("https://cdn.example.com/episode.m3u8?token=def")
+        );
     }
 
     #[test]
