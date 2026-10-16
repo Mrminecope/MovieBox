@@ -348,6 +348,56 @@ impl MovieBoxClient {
     }
 }
 
+impl MovieBoxClient {
+    /// Fetch progressive playback sources from MovieBox's TV BFF.
+    ///
+    /// The mobile BFF can return dated `/other/YYYY/MM/DD/` notice URLs in
+    /// place of real media URLs. The TV BFF exposes playable entries in
+    /// `data.resources[]`, using a TV client profile and the same signed
+    /// request scheme.
+    pub async fn get_tv_play_info(
+        &self,
+        subject_id: &str,
+        season: usize,
+        episode: usize,
+    ) -> Result<Value, ScraperError> {
+        let episode_query = if season == 0 && episode == 0 {
+            "se=&ep=".to_string()
+        } else {
+            format!("se={season}&ep={episode}")
+        };
+        let url = format!(
+            "https://tv.aoneroom.com/wefeed-tv-bff/subject/play-info/v2?subjectId={subject_id}&{episode_query}&vipLevel=0&host=tv.aoneroom.com"
+        );
+
+        // Refresh an expired anonymous token once, then propagate any remaining
+        // failure so the provider can try the resource-detector fallback.
+        let mut refreshed = false;
+        loop {
+            let token = self.ensure_session().await?;
+            let headers = build_signed_headers(
+                "GET",
+                &url,
+                None,
+                Some(&token),
+                super::TV_USER_AGENT,
+                super::TV_CLIENT_INFO,
+                &self.spoofed_ip,
+            );
+
+            let response = self.client.get(&url).headers(headers).send().await?;
+            if matches!(response.status().as_u16(), 401 | 403) && !refreshed {
+                self.invalidate_session();
+                refreshed = true;
+                continue;
+            }
+
+            self.absorb_x_user(response.headers()).await;
+            return self.parse_response(response).await;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
