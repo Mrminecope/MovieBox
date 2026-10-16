@@ -576,19 +576,18 @@ impl App {
                         let error_output = std::fs::read_to_string(&log_path).unwrap_or_default();
                         let _ = std::fs::remove_file(&log_path);
 
-                        let quick_vlc_failure = result.as_ref().is_ok_and(|status| {
-                            should_retry_vlc_with_mpv(kind, status.success(), start_time.elapsed())
-                        });
+                        let quick_vlc_failure =
+                            should_retry_vlc_with_mpv(kind, start_time.elapsed());
                         let mut retried_with_mpv = false;
 
                         if quick_vlc_failure
                             && crate::player::detect().contains(&crate::player::PlayerKind::Mpv)
                         {
                             let _ = sender.send(Action::SetStatus(
-                                "VLC exited immediately; retrying playback with MPV.".to_string(),
+                                "VLC closed immediately; retrying playback with MPV.".to_string(),
                             ));
                             log::warn!(
-                                "VLC exited after {}ms; retrying the same stream with MPV",
+                                "VLC closed after {}ms; retrying the same stream with MPV",
                                 start_time.elapsed().as_millis()
                             );
 
@@ -840,12 +839,10 @@ impl App {
 }
 fn should_retry_vlc_with_mpv(
     kind: crate::tui::state::PlayerKind,
-    status_success: bool,
     elapsed: std::time::Duration,
 ) -> bool {
     matches!(kind, crate::tui::state::PlayerKind::Vlc)
-        && !status_success
-        && elapsed < std::time::Duration::from_secs(5)
+        && elapsed < std::time::Duration::from_secs(3)
 }
 
 fn is_vlc_normal_exit(
@@ -1348,26 +1345,9 @@ mod tests {
     fn vlc_quick_failure_retries_with_mpv() {
         use crate::tui::state::PlayerKind;
 
-        assert!(should_retry_vlc_with_mpv(
-            PlayerKind::Vlc,
-            false,
-            Duration::from_secs(1)
-        ));
-        assert!(!should_retry_vlc_with_mpv(
-            PlayerKind::Vlc,
-            true,
-            Duration::from_secs(1)
-        ));
-        assert!(!should_retry_vlc_with_mpv(
-            PlayerKind::Vlc,
-            false,
-            Duration::from_secs(5)
-        ));
-        assert!(!should_retry_vlc_with_mpv(
-            PlayerKind::Mpv,
-            false,
-            Duration::from_secs(1)
-        ));
+        assert!(should_retry_vlc_with_mpv(PlayerKind::Vlc, Duration::from_secs(1)));
+        assert!(!should_retry_vlc_with_mpv(PlayerKind::Vlc, Duration::from_secs(3)));
+        assert!(!should_retry_vlc_with_mpv(PlayerKind::Mpv, Duration::from_secs(1)));
     }
 
     #[test]
