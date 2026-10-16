@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.29] - 2026-10-16
+
+### Fixed
+- Restored MovieBox playback when the mobile play-info and resource endpoints return dated notice-video URLs instead of real media.
+- Added a fallback to the MovieBox TV playback endpoint and its `resources[]` entries.
+- Added a final fallback to playable URLs retained in `resourceDetectors[].resolutionList[]`.
+- Filtered placeholder URLs under `/other/YYYY/MM/DD/` without rejecting legitimate CDN and DASH URLs.
+- Added regression tests for TV playback resources, notice URL filtering, and episode matching.
+
+### Security
+- Retained the patched `quinn-proto` and `rustls` dependencies from v0.1.28.
+
 ## [0.1.28] - 2026-10-16
 
 ### Fixed
