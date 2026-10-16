@@ -879,6 +879,18 @@ fn alternate_episode_matches(
         && (requested_episode == 0 || item_episode.is_none_or(|n| n == requested_episode))
 }
 
+fn alternate_item_url<'a>(
+    item: &'a serde_json::Value,
+    keys: &[&str],
+) -> Option<&'a str> {
+    keys.iter()
+        .filter_map(|key| item.get(*key).and_then(|v| v.as_str()))
+        .find(|url| {
+            (url.starts_with("https://") || url.starts_with("http://"))
+                && !is_deprecation_notice_url(url)
+        })
+}
+
 /// Convert a real playback resource supplied by the TV BFF or resource detectors.
 /// Reject dated /other/YYYY/MM/DD placeholder links before adding them to the UI.
 fn alternate_resource_to_release(
@@ -1040,11 +1052,7 @@ pub fn moviebox_tv_play_info_json_to_releases(
         .iter()
         .filter(|item| alternate_episode_matches(item, season, episode))
         .filter_map(|item| {
-            let url = item
-                .get("url")
-                .or_else(|| item.get("resourceLink"))
-                .or_else(|| item.get("sourceUrl"))
-                .and_then(|v| v.as_str());
+            let url = alternate_item_url(item, &["url", "resourceLink", "sourceUrl"]);
             alternate_resource_to_release(
                 item,
                 url,
@@ -1088,11 +1096,7 @@ pub fn moviebox_resource_detector_json_to_releases(
             if !alternate_episode_matches(item, season, episode) {
                 continue;
             }
-            let url = item
-                .get("resourceLink")
-                .or_else(|| item.get("sourceUrl"))
-                .or_else(|| item.get("url"))
-                .and_then(|v| v.as_str());
+            let url = alternate_item_url(item, &["resourceLink", "sourceUrl", "url"]);
             if let Some(release) = alternate_resource_to_release(
                 item,
                 url,
@@ -1112,6 +1116,106 @@ pub fn moviebox_resource_detector_json_to_releases(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn test_moviebox_rejects_dated_notice_urls() {
+        assert!(is_deprecation_notice_url(
+            "https://cdn.example.com/other/2026/10/13/fake-encoded-video.mp4"
+        ));
+        assert!(!is_deprecation_notice_url(
+            "https://sacdn.example.com/dash/title/index.mpd"
+        ));
+    }
+
+    #[test]
+    fn test_moviebox_tv_play_info_uses_real_resources_and_filters_notice_urls() {
+        let payload = json!({
+            "title": "Example Movie",
+            "resources": [
+                {
+                    "id": "real-1080",
+                    "url": "https://cdn.example.com/real.mp4?token=abc",
+                    "resolution": "1080p",
+                    "codec": "h264",
+                    "size": "123456",
+                    "linkType": "0",
+                    "se": 1,
+                    "ep": 2
+                },
+                {
+                    "id": "dated-notice",
+                    "url": "https://cdn.example.com/other/2026/10/13/fake.mp4",
+                    "resolution": "2160p",
+                    "se": 1,
+                    "ep": 2
+                },
+                {
+                    "id": "wrong-episode",
+                    "url": "https://cdn.example.com/other/2026/10/13/episode.mp4",
+                    "resolution": "720p",
+                    "se": 1,
+                    "ep": 1
+                }
+            ]
+        });
+
+        let releases =
+            moviebox_tv_play_info_json_to_releases(&payload, 1, 2, "MovieBoxTV/Test");
+        assert_eq!(releases.len(), 1);
+        assert_eq!(releases[0].quality.as_deref(), Some("1080p"));
+        assert_eq!(releases[0].resource_id.as_deref(), Some("real-1080"));
+        assert_eq!(
+            releases[0].direct_url(),
+            Some("https://cdn.example.com/real.mp4?token=abc")
+        );
+        assert!(releases[0].mirrors[0]
+            .headers
+            .iter()
+            .any(|(name, value)| name == "User-Agent" && value == "MovieBoxTV/Test"));
+    }
+
+    #[test]
+    fn test_moviebox_resource_detector_fallback_prefers_real_url_and_filters_episode() {
+        let payload = json!({
+            "resourceDetectors": [{
+                "resolutionList": [
+                    {
+                        "resourceId": "notice",
+                        "resolution": "1080p",
+                        "resourceLink": "https://cdn.example.com/other/2026/10/13/fake.mp4",
+                        "se": 1,
+                        "ep": 2
+                    },
+                    {
+                        "resourceId": "real-720",
+                        "resolution": "720p",
+                        "resourceLink": "https://cdn.example.com/other/2026/10/13/fake.mp4",
+                        "sourceUrl": "https://cdn.example.com/episode.m3u8?token=def",
+                        "codecName": "h264",
+                        "se": 1,
+                        "ep": 2
+                    },
+                    {
+                        "resourceId": "wrong-episode",
+                        "resolution": "2160p",
+                        "resourceLink": "https://cdn.example.com/movie.m3u8",
+                        "se": 1,
+                        "ep": 1
+                    }
+                ]
+            }]
+        });
+
+        let releases = moviebox_resource_detector_json_to_releases(
+            &payload,
+            1,
+            2,
+            "MovieBox/Test",
+        );
+        assert_eq!(releases.len(), 1);
+        assert_eq!(releases[0].quality.as_deref(), Some("720p"));
+        assert_eq!(releases[0].direct_url(), Some("https://cdn.example.com/episode.m3u8?token=def"));
+    }
 
     #[test]
     fn test_moviebox_search_json_to_catalog() {
