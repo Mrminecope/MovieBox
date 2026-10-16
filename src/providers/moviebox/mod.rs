@@ -7,6 +7,12 @@ pub mod title;
 pub use title::clean_moviebox_title;
 
 pub const STREAM_REFERER: &str = "https://sportslive.wine";
+
+// The TV BFF remains a usable playback source when the mobile BFF returns
+// dated /other/ notice URLs instead of the actual media.
+pub const TV_USER_AGENT: &str =
+    "com.community.mbox.tv/50040014 (Linux; U; Android 13; en_US; MovieBoxTV; Build/TQ2A.230405.003)";
+pub(crate) const TV_CLIENT_INFO: &str = r#"{"package_name":"com.community.mbox.tv","version_name":"1.1.9.0820.03","version_code":50040014,"os":"android","os_version":"13","install_ch":"gp","device_id":"8c54b39a0f4721de","install_store":"gp","gaid":"00000000-0000-0000-0000-000000000000","brand":"Redmi","model":"23078RKD5C","system_language":"en","net":"NETWORK_WIFI","region":"US","timezone":"Asia/Kolkata","sp_code":"40401","X-Play-Mode":"2"}"#;
 use crate::providers::models::{CatalogItem, MediaDetails, ProviderError, ProviderKind};
 use crate::providers::{Provider, ProviderCapabilities};
 
@@ -126,10 +132,54 @@ impl crate::providers::ReleaseProvider for client::MovieBoxClient {
             Err(error) => endpoint_errors.push(format!("resource: {error}")),
         }
 
+        // Since the upstream mobile BFF began substituting dated notice-video
+        // URLs, try the TV BFF before concluding that the title has no streams.
         if releases.is_empty() {
+            match self.get_tv_play_info(id, season, episode).await {
+                Ok(tv_json) => {
+                    let tv_releases = adapt::moviebox_tv_play_info_json_to_releases(
+                        &tv_json,
+                        season,
+                        episode,
+                        TV_USER_AGENT,
+                    );
+                    for release in tv_releases {
+                        if let Some(url) = release.direct_url() {
+                            let base = url.split('?').next().unwrap_or(url).to_string();
+                            if !base.is_empty() && !seen_urls.insert(base) {
+                                continue;
+                            }
+                        }
+                        releases.push(release);
+                    }
+                }
+                Err(error) => endpoint_errors.push(format!("tv-play-info: {error}")),
+            }
+        }
+
+        // Last fallback: the mobile subject detail payload sometimes retains
+        // the real links under resourceDetectors even when resource.list is poisoned.
+        if releases.is_empty() {
+            match self.get_resource_detector_info(id).await {
+                Ok(detectors_json) => {
+                    releases.extend(adapt::moviebox_resource_detector_json_to_releases(
+                        &detectors_json,
+                        season,
+                        episode,
+                        self.user_agent(),
+                    ));
+                }
+                Err(error) => endpoint_errors.push(format!("resource-detectors: {error}")),
+            }
+        }
+
+        if releases.is_empty() {
+            log::warn!(
+                "MovieBox returned no playable URLs for subject {id} (season {season}, episode {episode}); checked mobile play-info/resources, TV play-info, and resource detectors."
+            );
             if !endpoint_errors.is_empty() {
                 log::warn!(
-                    "MovieBox stream lookup failed for subject {id} (season {season}, episode {episode}): {}",
+                    "MovieBox stream lookup endpoint failures: {}",
                     endpoint_errors.join("; ")
                 );
             }
@@ -177,6 +227,17 @@ impl MovieBoxClient {
         };
         self.get(&path).await
     }
+    pub async fn get_resource_detector_info(
+        &self,
+        subject_id: &str,
+    ) -> Result<Value, ScraperError> {
+        let path = format!(
+            "/wefeed-mobile-bff/subject-api/get?subjectId={}",
+            subject_id
+        );
+        self.get(&path).await
+    }
+
     pub async fn search(&self, query: &str, page: usize) -> Result<Value, ScraperError> {
         let payload = json!({
             "keyword": query,
