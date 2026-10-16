@@ -7,6 +7,12 @@ pub mod title;
 pub use title::clean_moviebox_title;
 
 pub const STREAM_REFERER: &str = "https://sportslive.wine";
+
+// The TV BFF remains a usable playback source when the mobile BFF returns
+// dated /other/ notice URLs instead of the actual media.
+pub const TV_USER_AGENT: &str =
+    "com.community.mbox.tv/50040014 (Linux; U; Android 13; en_US; MovieBoxTV; Build/TQ2A.230405.003)";
+pub(crate) const TV_CLIENT_INFO: &str = r#"{"package_name":"com.community.mbox.tv","version_name":"1.1.9.0820.03","version_code":50040014,"os":"android","os_version":"13","install_ch":"gp","device_id":"8c54b39a0f4721de","install_store":"gp","gaid":"00000000-0000-0000-0000-000000000000","brand":"Redmi","model":"23078RKD5C","system_language":"en","net":"NETWORK_WIFI","region":"US","timezone":"Asia/Kolkata","sp_code":"40401","X-Play-Mode":"2"}"#;
 use crate::providers::models::{CatalogItem, MediaDetails, ProviderError, ProviderKind};
 use crate::providers::{Provider, ProviderCapabilities};
 
